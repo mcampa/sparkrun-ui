@@ -7,7 +7,13 @@ import { Badge } from "@/app/components/ui/Badge";
 import { WorkloadCard } from "./WorkloadCard";
 import { AggregateStats } from "./AggregateStats";
 
-export function DashboardLive({ initial }: { initial: ClusterStatus }) {
+export function DashboardLive({
+  initial,
+  recipeNameByCluster,
+}: {
+  initial: ClusterStatus;
+  recipeNameByCluster: Map<string, string>;
+}) {
   const [status, setStatus] = useState<ClusterStatus>(initial);
   const [connected, setConnected] = useState(true);
 
@@ -63,7 +69,11 @@ export function DashboardLive({ initial }: { initial: ClusterStatus }) {
         ) : (
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {status.solo_entries.map((w) => (
-              <WorkloadCard key={w.cluster_id} workload={w} />
+              <WorkloadCard
+                key={w.cluster_id}
+                workload={w}
+                recipeName={recipeNameByCluster.get(w.cluster_id)}
+              />
             ))}
           </div>
         )}
