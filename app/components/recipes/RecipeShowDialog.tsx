@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Loader2, Rocket } from "lucide-react";
 import { Dialog } from "@/app/components/ui/Dialog";
 import { Button } from "@/app/components/ui/Button";
-import { CodeBlock } from "@/app/components/ui/CodeBlock";
+import { YamlEditor } from "@/app/components/launch/YamlEditor";
 import { rpc } from "@/lib/rpc/client";
 
 const cache = new Map<string, string>();
@@ -63,7 +63,7 @@ export function RecipeShowDialog({
           ) : error ? (
             <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           ) : text ? (
-            <CodeBlock className="max-h-[60vh]">{text}</CodeBlock>
+            <YamlEditor value={text} readOnly className="max-h-[60vh]" />
           ) : null}
         </Dialog.Body>
         <Dialog.Footer>
