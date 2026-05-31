@@ -26,13 +26,17 @@ export function Select({
   disabled?: boolean;
 }) {
   return (
-    <BaseSelect.Root value={value} onValueChange={(v) => v != null && onValueChange(String(v))} disabled={disabled}>
+    <BaseSelect.Root
+      value={value}
+      onValueChange={(v) => v != null && onValueChange(String(v))}
+      disabled={disabled}
+    >
       <BaseSelect.Trigger
         className={cn(
           "inline-flex h-9 w-full items-center justify-between rounded-md border border-zinc-300 bg-white px-3 text-sm",
           "text-zinc-900 hover:bg-zinc-50 focus:ring-2 focus:ring-sky-500/30 focus:outline-none",
           "dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800",
-          disabled && "opacity-50 cursor-not-allowed",
+          disabled && "cursor-not-allowed opacity-50",
           className,
         )}
       >

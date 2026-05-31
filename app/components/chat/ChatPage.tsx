@@ -135,9 +135,7 @@ export function ChatPage({ initial }: { initial: ClusterStatus }) {
           </Button>
         )}
         {selectedInstance && (
-          <span className="text-xs text-zinc-500 dark:text-zinc-400">
-            {selectedInstance.label}
-          </span>
+          <span className="text-xs text-zinc-500 dark:text-zinc-400">{selectedInstance.label}</span>
         )}
       </div>
 
@@ -168,18 +166,14 @@ export function ChatPage({ initial }: { initial: ClusterStatus }) {
                       }`}
                     >
                       <div className="flex items-start gap-2">
-                        {msg.role === "assistant" && (
-                          <Bot size={16} className="mt-0.5 shrink-0" />
-                        )}
-                        <span className="whitespace-pre-wrap break-words text-sm">
+                        {msg.role === "assistant" && <Bot size={16} className="mt-0.5 shrink-0" />}
+                        <span className="text-sm break-words whitespace-pre-wrap">
                           {msg.content ||
                             (isStreaming && i === messages.length - 1 ? (
                               <span className="inline-block h-3 w-3 animate-pulse rounded-full bg-current opacity-60" />
                             ) : null)}
                         </span>
-                        {msg.role === "user" && (
-                          <User size={16} className="mt-0.5 shrink-0" />
-                        )}
+                        {msg.role === "user" && <User size={16} className="mt-0.5 shrink-0" />}
                       </div>
                     </div>
                   </div>
