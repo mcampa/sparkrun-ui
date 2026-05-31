@@ -56,6 +56,19 @@ export function LaunchWizard({
   const [previewing, setPreviewing] = useState(false);
 
   const [launching, setLaunching] = useState(false);
+  const [stoppingId, setStoppingId] = useState<string | null>(null);
+
+  const portConflicts = useMemo(
+    () =>
+      issues.filter(
+        (i) =>
+          i.severity === "error" &&
+          i.conflictingClusterId &&
+          i.message.includes("Port") &&
+          i.message.includes("already used"),
+      ),
+    [issues],
+  );
 
   const recipesByName = useMemo(
     () => Object.fromEntries(recipes.map((r) => [r.name, r])),
@@ -130,6 +143,22 @@ export function LaunchWizard({
       if (validateTimer.current) clearTimeout(validateTimer.current);
     };
   }, [yamlText, runValidation]);
+
+  const stopConflicting = useCallback(
+    async (clusterId: string) => {
+      setStoppingId(clusterId);
+      try {
+        await rpc.workloads.stop({ clusterId });
+        toast.success("Instance stopped", `Stopped ${clusterId}`);
+        await runValidation();
+      } catch (err) {
+        toast.error("Failed to stop instance", err instanceof Error ? err.message : String(err));
+      } finally {
+        setStoppingId(null);
+      }
+    },
+    [runValidation],
+  );
 
   const generatePreview = useCallback(async () => {
     setPreviewing(true);
@@ -252,6 +281,27 @@ export function LaunchWizard({
               </CardHeader>
               <CardBody>
                 <IssueList issues={issues} />
+                {portConflicts.length > 0 && (
+                  <div className="mt-3 flex flex-col gap-2">
+                    {portConflicts.map((issue) => (
+                      <Button
+                        key={issue.conflictingClusterId}
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => stopConflicting(issue.conflictingClusterId!)}
+                        disabled={stoppingId === issue.conflictingClusterId}
+                      >
+                        {stoppingId === issue.conflictingClusterId ? (
+                          <>
+                            <Loader2 size={14} className="animate-spin" /> Stopping…
+                          </>
+                        ) : (
+                          `Stop ${issue.conflictingClusterId}`
+                        )}
+                      </Button>
+                    ))}
+                  </div>
+                )}
               </CardBody>
             </Card>
           </div>
