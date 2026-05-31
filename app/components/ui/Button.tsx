@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cn } from "@/lib/cn";
 
-type Variant = "primary" | "secondary" | "ghost" | "danger";
+type Variant = "primary" | "secondary" | "ghost" | "danger" | "success";
 type Size = "sm" | "md" | "lg";
 
 const base =
@@ -24,6 +24,9 @@ const variants: Record<Variant, string> = {
   danger:
     "bg-red-600 text-white hover:bg-red-500 active:bg-red-700 " +
     "dark:bg-red-500 dark:hover:bg-red-400",
+  success:
+    "bg-emerald-600 text-white hover:bg-emerald-500 active:bg-emerald-700 " +
+    "dark:bg-emerald-500 dark:hover:bg-emerald-400",
 };
 
 const sizes: Record<Size, string> = {
