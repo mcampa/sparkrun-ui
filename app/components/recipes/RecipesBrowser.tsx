@@ -6,6 +6,7 @@ import { Card, CardBody } from "@/app/components/ui/Card";
 import { Badge } from "@/app/components/ui/Badge";
 import { Button } from "@/app/components/ui/Button";
 import { Select } from "@/app/components/ui/Select";
+import { Switch } from "@/app/components/ui/Switch";
 import { Input } from "@/app/components/ui/Field";
 import type { RecipeListItem } from "@/lib/schemas";
 import { RecipeInfoPopover } from "./RecipeInfoPopover";
@@ -19,6 +20,10 @@ export function RecipesBrowser({
   runningRecipes: string[];
 }) {
   const running = useMemo(() => new Set(runningRecipes), [runningRecipes]);
+  const runningCount = useMemo(
+    () => recipes.filter((r) => running.has(r.name)).length,
+    [recipes, running],
+  );
   const [registry, setRegistry] = useState<string>(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("recipes-registry") ?? "all";
@@ -31,6 +36,12 @@ export function RecipesBrowser({
     }
     return "";
   });
+  const [showRunningOnly, setShowRunningOnly] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("recipes-running-only") === "true";
+    }
+    return false;
+  });
 
   useEffect(() => {
     localStorage.setItem("recipes-registry", registry);
@@ -39,6 +50,11 @@ export function RecipesBrowser({
   useEffect(() => {
     localStorage.setItem("recipes-search", search);
   }, [search]);
+
+  useEffect(() => {
+    localStorage.setItem("recipes-running-only", String(showRunningOnly));
+  }, [showRunningOnly]);
+
   const [openRecipe, setOpenRecipe] = useState<string | null>(null);
 
   const registries = useMemo(() => {
@@ -50,12 +66,13 @@ export function RecipesBrowser({
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     return recipes.filter((r) => {
+      if (showRunningOnly && !running.has(r.name)) return false;
       if (registry !== "all" && r.registry !== registry) return false;
       if (!term) return true;
       const hay = `${r.name} ${r.model} ${r.description ?? ""} ${r.runtime}`.toLowerCase();
       return hay.includes(term);
     });
-  }, [recipes, registry, search]);
+  }, [recipes, registry, search, showRunningOnly, running]);
 
   const byRegistry = useMemo(() => {
     const m = new Map<string, RecipeListItem[]>();
@@ -78,15 +95,15 @@ export function RecipesBrowser({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-baseline gap-3">
           <h1 className="text-2xl font-semibold tracking-tight">Recipes</h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
             {filtered.length} of {recipes.length}
           </p>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <div className="w-full sm:w-56">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="w-44">
             <Select
               value={registry}
               onValueChange={setRegistry}
@@ -94,7 +111,7 @@ export function RecipesBrowser({
               placeholder="Registry"
             />
           </div>
-          <div className="relative w-full sm:w-72">
+          <div className="relative w-56">
             <Search
               size={14}
               className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-zinc-400"
@@ -102,10 +119,15 @@ export function RecipesBrowser({
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Filter by name, model, runtime…"
+              placeholder="Search…"
               className="pl-8"
             />
           </div>
+          <label className="flex cursor-pointer items-center gap-2 text-xs text-zinc-600 select-none dark:text-zinc-400">
+            <Switch checked={showRunningOnly} onCheckedChange={setShowRunningOnly} />
+            Running
+            {runningCount > 0 && <span className="text-zinc-400">({runningCount})</span>}
+          </label>
         </div>
       </div>
 
