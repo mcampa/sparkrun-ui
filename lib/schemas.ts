@@ -28,7 +28,7 @@ const WorkloadMetaSchema = z
     recipe: z.string().optional(),
     recipe_state: z.record(z.string(), z.unknown()).optional(),
   })
-  .passthrough();
+  .loose();
 
 export const WorkloadSchema = z.object({
   cluster_id: z.string(),
@@ -80,7 +80,7 @@ export const MonitorTickSchema = z
     gpu_mem_used_gb: z.number().optional(),
     gpu_mem_total_gb: z.number().optional(),
   })
-  .passthrough();
+  .loose();
 export type MonitorTick = z.infer<typeof MonitorTickSchema>;
 
 export const ClusterEntrySchema = z.object({
