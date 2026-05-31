@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Cpu, MemoryStick, Server, Zap } from "lucide-react";
+import { Cpu, MemoryStick, Server, Thermometer, Zap } from "lucide-react";
 import { Card, CardBody } from "@/app/components/ui/Card";
 import { rpc } from "@/lib/rpc/client";
 
@@ -18,6 +18,8 @@ type Aggregate = {
   gpuMemUsedGb: number;
   gpuMemTotalGb: number;
   powerW: number;
+  cpuTempC: number;
+  gpuTempC: number;
   jobsTotal: number;
 };
 
@@ -38,6 +40,8 @@ function aggregate(tick: Tick | null): Aggregate {
       gpuMemUsedGb: 0,
       gpuMemTotalGb: 0,
       powerW: 0,
+      cpuTempC: 0,
+      gpuTempC: 0,
       jobsTotal: 0,
     };
   }
@@ -49,6 +53,8 @@ function aggregate(tick: Tick | null): Aggregate {
   let gpuMemUsed = 0;
   let gpuMemTotal = 0;
   let power = 0;
+  let cpuTemp = 0;
+  let gpuTemp = 0;
   let jobs = 0;
   for (const m of hosts) {
     cpuSum += num(m.cpu_usage_pct);
@@ -58,6 +64,8 @@ function aggregate(tick: Tick | null): Aggregate {
     gpuMemUsed += num(m.gpu_mem_used_mb);
     gpuMemTotal += num(m.gpu_mem_total_mb);
     power += num(m.gpu_power_w);
+    cpuTemp += num(m.cpu_temp_c);
+    gpuTemp += num(m.gpu_temp_c);
     jobs += num(m.sparkrun_jobs);
   }
   const n = hosts.length || 1;
@@ -70,6 +78,8 @@ function aggregate(tick: Tick | null): Aggregate {
     gpuMemUsedGb: gpuMemUsed / 1024,
     gpuMemTotalGb: gpuMemTotal / 1024,
     powerW: power,
+    cpuTempC: cpuTemp / n,
+    gpuTempC: gpuTemp / n,
     jobsTotal: jobs,
   };
 }
@@ -136,7 +146,7 @@ export function AggregateStats() {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
           <Stat
             icon={<Cpu size={14} />}
             tone="sky"
@@ -175,6 +185,18 @@ export function AggregateStats() {
             }
             pct={gpuMemPct}
           />
+          <Stat
+            icon={<Thermometer size={14} />}
+            tone="red"
+            label="Temps"
+            value={
+              agg.cpuTempC || agg.gpuTempC
+                ? `${agg.gpuTempC.toFixed(0)}°C / ${agg.cpuTempC.toFixed(0)}°C`
+                : "—"
+            }
+            sub="GPU / CPU avg"
+            pct={agg.gpuTempC > 0 ? Math.min(100, (agg.gpuTempC / 100) * 100) : 0}
+          />
         </div>
       </CardBody>
     </Card>
@@ -191,6 +213,7 @@ const toneBg: Record<string, string> = {
   purple: "bg-purple-500 dark:bg-purple-400",
   green: "bg-emerald-500 dark:bg-emerald-400",
   amber: "bg-amber-500 dark:bg-amber-400",
+  red: "bg-red-500 dark:bg-red-400",
 };
 const toneStroke: Record<string, string> = {
   sky: "stroke-sky-500 dark:stroke-sky-400",
@@ -203,6 +226,7 @@ const toneText: Record<string, string> = {
   purple: "text-purple-600 dark:text-purple-400",
   green: "text-emerald-600 dark:text-emerald-400",
   amber: "text-amber-600 dark:text-amber-400",
+  red: "text-red-600 dark:text-red-400",
 };
 
 function Stat({
