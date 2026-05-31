@@ -56,10 +56,10 @@ export function ChatPage({ initial }: { initial: ClusterStatus }) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Clear chat on instance switch
-  useEffect(() => {
+  const handleClusterChange = (clusterId: string) => {
     setMessages([]);
-  }, [selectedClusterId]);
+    setSelectedClusterId(clusterId);
+  };
 
   const handleSend = async () => {
     if (!inputText.trim() || !selectedClusterId || isStreaming) return;
@@ -123,7 +123,7 @@ export function ChatPage({ initial }: { initial: ClusterStatus }) {
       <div className="flex items-center gap-3">
         <Select
           value={selectedClusterId}
-          onValueChange={setSelectedClusterId}
+          onValueChange={handleClusterChange}
           options={instances}
           placeholder="Select an instance..."
           className="w-72"
