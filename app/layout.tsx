@@ -16,7 +16,20 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "sparkrun",
-  description: "Web UI for sparkrun",
+  description: "Web UI for sparkrun — launch and monitor inference workloads on DGX Spark",
+  applicationName: "sparkrun",
+  openGraph: {
+    title: "sparkrun",
+    description: "Web UI for sparkrun — launch and monitor inference workloads on DGX Spark",
+    images: ["/logo.svg"],
+  },
+};
+
+export const viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#0ea5e9" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b1220" },
+  ],
 };
 
 export default function RootLayout({

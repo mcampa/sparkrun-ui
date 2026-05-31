@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="sparkrun-grad" x1="15%" y1="0%" x2="85%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="55%" stop-color="#0ea5e9"/>
+      <stop offset="100%" stop-color="#10b981"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="7" fill="#0b1220"/>
+  <path
+    d="M16 4 Q17.5 14.5 28 16 Q17.5 17.5 16 28 Q14.5 17.5 4 16 Q14.5 14.5 16 4 Z"
+    fill="url(#sparkrun-grad)"
+  />
+  <path
+    d="M24.5 5.5 Q25 8.5 28 9 Q25 9.5 24.5 12.5 Q24 9.5 21 9 Q24 8.5 24.5 5.5 Z"
+    fill="#a7f3d0"
+    opacity="0.85"
+  />
+</svg>

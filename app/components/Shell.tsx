@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Cpu } from "lucide-react";
+import Image from "next/image";
 import { Nav } from "./Nav";
 
 export function Shell({ children }: { children: React.ReactNode }) {
@@ -11,7 +11,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             href="/"
             className="flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100"
           >
-            <Cpu size={18} strokeWidth={2.25} className="text-sky-600 dark:text-sky-400" />
+            <Image src="/logo.svg" alt="" width={20} height={20} priority />
             sparkrun
           </Link>
           <Nav />
