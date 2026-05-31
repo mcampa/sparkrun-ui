@@ -5,6 +5,7 @@ import type { ClusterStatus } from "@/lib/schemas";
 import { Card, CardBody } from "@/app/components/ui/Card";
 import { Badge } from "@/app/components/ui/Badge";
 import { WorkloadCard } from "./WorkloadCard";
+import { AggregateStats } from "./AggregateStats";
 
 export function DashboardLive({ initial }: { initial: ClusterStatus }) {
   const [status, setStatus] = useState<ClusterStatus>(initial);
@@ -47,19 +48,26 @@ export function DashboardLive({ initial }: { initial: ClusterStatus }) {
         </div>
       </div>
 
-      {status.solo_entries.length === 0 ? (
-        <Card>
-          <CardBody className="text-sm text-zinc-500 dark:text-zinc-400">
-            No workloads are currently running.
-          </CardBody>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {status.solo_entries.map((w) => (
-            <WorkloadCard key={w.cluster_id} workload={w} />
-          ))}
-        </div>
-      )}
+      <AggregateStats />
+
+      <div className="flex flex-col gap-3">
+        <h2 className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+          Workloads
+        </h2>
+        {status.solo_entries.length === 0 ? (
+          <Card>
+            <CardBody className="text-sm text-zinc-500 dark:text-zinc-400">
+              No workloads are currently running.
+            </CardBody>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            {status.solo_entries.map((w) => (
+              <WorkloadCard key={w.cluster_id} workload={w} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
