@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Loader2, Rocket } from "lucide-react";
 import { Dialog } from "@/app/components/ui/Dialog";
 import { Button } from "@/app/components/ui/Button";
+import { Badge } from "@/app/components/ui/Badge";
 import { YamlEditor } from "@/app/components/launch/YamlEditor";
 import { rpc } from "@/lib/rpc/client";
 
@@ -13,10 +14,12 @@ export function RecipeShowDialog({
   name,
   open,
   onOpenChange,
+  running = false,
 }: {
   name: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  running?: boolean;
 }) {
   const [text, setText] = useState<string | null>(() => cache.get(name) ?? null);
   const [error, setError] = useState<string | null>(null);
@@ -74,12 +77,16 @@ export function RecipeShowDialog({
               </Button>
             }
           />
-          <Link href={`/launch?recipe=${encodeURIComponent(name)}`}>
-            <Button variant="primary">
-              <Rocket size={14} />
-              Launch
-            </Button>
-          </Link>
+          {running ? (
+            <Badge tone="green">already running</Badge>
+          ) : (
+            <Link href={`/launch?recipe=${encodeURIComponent(name)}`}>
+              <Button variant="primary">
+                <Rocket size={14} />
+                Launch
+              </Button>
+            </Link>
+          )}
         </Dialog.Footer>
       </Dialog.Content>
     </Dialog>

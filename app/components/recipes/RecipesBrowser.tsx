@@ -136,6 +136,7 @@ export function RecipesBrowser({
           name={openRecipe}
           open={true}
           onOpenChange={(o) => !o && setOpenRecipe(null)}
+          running={running.has(openRecipe)}
         />
       )}
 
