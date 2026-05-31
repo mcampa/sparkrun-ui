@@ -33,3 +33,11 @@ body {
 #root-isolation {
   isolation: isolate;
 }
+
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+[role="tab"],
+[role="option"],
+[role="menuitem"] {
+  cursor: pointer;
+}
