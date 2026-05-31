@@ -22,7 +22,7 @@ const HostMetricsSchema = z
     sparkrun_jobs: z.string().optional(),
     sparkrun_job_names: z.string().optional(),
   })
-  .passthrough();
+  .loose();
 
 const TickSchema = z.object({
   timestamp: z.number(),

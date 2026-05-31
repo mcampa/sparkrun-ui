@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   unit:
-    name: Lint, typecheck, unit tests
+    name: Lint, format, typecheck, unit tests
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -32,8 +32,8 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Format check
-        run: pnpm format:check
+      - name: Format
+        run: pnpm format:ci
 
       - name: Lint
         run: pnpm lint

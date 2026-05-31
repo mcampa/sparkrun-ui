@@ -75,7 +75,7 @@ describe("schemas parse real sparkrun --json fixtures", () => {
       const obj = JSON.parse(line);
       expect(typeof obj.timestamp).toBe("number");
       expect(typeof obj.hosts).toBe("object");
-      // Per-host metrics should parse as our flexible (passthrough) schema
+      // Per-host metrics should parse as our flexible (loose) schema
       for (const host of Object.values(obj.hosts as Record<string, unknown>)) {
         MonitorTickSchema.parse({ host: "x", ...(host as object) });
       }
