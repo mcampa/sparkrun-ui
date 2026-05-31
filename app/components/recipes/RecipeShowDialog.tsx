@@ -15,11 +15,13 @@ export function RecipeShowDialog({
   open,
   onOpenChange,
   running = false,
+  showLaunch = true,
 }: {
   name: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   running?: boolean;
+  showLaunch?: boolean;
 }) {
   const [text, setText] = useState<string | null>(() => cache.get(name) ?? null);
   const [error, setError] = useState<string | null>(null);
@@ -79,14 +81,14 @@ export function RecipeShowDialog({
           />
           {running ? (
             <Badge tone="green">already running</Badge>
-          ) : (
+          ) : showLaunch ? (
             <Link href={`/launch?recipe=${encodeURIComponent(name)}`}>
               <Button variant="primary">
                 <Rocket size={14} />
                 Launch
               </Button>
             </Link>
-          )}
+          ) : null}
         </Dialog.Footer>
       </Dialog.Content>
     </Dialog>
