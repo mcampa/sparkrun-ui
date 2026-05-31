@@ -121,3 +121,7 @@ lib/
 - No persistence layer — every page reflects current CLI state and the
   sparkrun cache directly.
 - No auth. Bind to a trusted network only.
+
+## License
+
+Apache License 2.0 — see [LICENSE](LICENSE) for details.
