@@ -77,7 +77,9 @@ export const run = os
       args.push("-b", `concurrency=${input.concurrency.join(",")}`);
     }
     if (args.length === 3) {
-      throw new ORPCError("BAD_REQUEST", { message: "Must specify at least cluster, hosts, or profile" });
+      throw new ORPCError("BAD_REQUEST", {
+        message: "Must specify at least cluster, hosts, or profile",
+      });
     }
     fireAndForgetSparkrun(args);
     return { ok: true as const };

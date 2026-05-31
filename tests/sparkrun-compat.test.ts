@@ -8,11 +8,7 @@
  */
 import { spawnSync } from "node:child_process";
 import { describe, expect, it, beforeAll } from "vitest";
-import {
-  ClusterEntrySchema,
-  ClusterStatusSchema,
-  RecipeListSchema,
-} from "@/lib/schemas";
+import { ClusterEntrySchema, ClusterStatusSchema, RecipeListSchema } from "@/lib/schemas";
 import { z } from "zod";
 
 const SPARKRUN = process.env.SPARKRUN_BIN || "sparkrun";

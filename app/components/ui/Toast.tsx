@@ -10,7 +10,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <BaseToast.Provider toastManager={toastManager}>
       {children}
       <BaseToast.Portal>
-        <BaseToast.Viewport className="fixed bottom-4 right-4 z-[60] flex w-[360px] flex-col gap-2">
+        <BaseToast.Viewport className="fixed right-4 bottom-4 z-[60] flex w-[360px] flex-col gap-2">
           <ToastList />
         </BaseToast.Viewport>
       </BaseToast.Portal>
@@ -28,8 +28,7 @@ const toneStyles = {
     "border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-100",
   error:
     "border-red-300 bg-red-50 text-red-900 dark:border-red-800 dark:bg-red-950 dark:text-red-100",
-  info:
-    "border-zinc-200 bg-white text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100",
+  info: "border-zinc-200 bg-white text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100",
 };
 
 const icons = {
@@ -52,7 +51,7 @@ function ToastItem({ toast }: { toast: BaseToast.Root.ToastObject }) {
       )}
     >
       <Icon size={18} className="mt-0.5 flex-shrink-0" />
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 flex-1">
         <BaseToast.Title className="text-sm font-medium">{toast.title}</BaseToast.Title>
         {toast.description && (
           <BaseToast.Description className="mt-0.5 text-xs opacity-80">

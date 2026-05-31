@@ -1,0 +1,12 @@
+node_modules
+.next
+.turbo
+dist
+build
+coverage
+pnpm-lock.yaml
+public/*.svg
+app/icon.svg
+app/apple-icon.svg
+lib/__fixtures__
+*.md

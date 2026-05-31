@@ -16,11 +16,7 @@ function fmtTime(iso: string | null | undefined): string {
   }
 }
 
-export default async function BenchmarkPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function BenchmarkPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const data = await serverClient.benchmarks.get({ id });
   if (!data) notFound();
@@ -110,7 +106,10 @@ export default async function BenchmarkPage({
             <BenchmarkChart rows={consolidated.benchmarks} />
           ) : (
             <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              No consolidated metrics yet. {state.failed_indices?.length ? "Run failed before metrics were captured." : "Benchmark may still be running."}
+              No consolidated metrics yet.{" "}
+              {state.failed_indices?.length
+                ? "Run failed before metrics were captured."
+                : "Benchmark may still be running."}
             </p>
           )}
         </CardBody>
@@ -119,15 +118,7 @@ export default async function BenchmarkPage({
   );
 }
 
-function Row({
-  label,
-  value,
-  mono,
-}: {
-  label: string;
-  value: string;
-  mono?: boolean;
-}) {
+function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
     <div className="flex justify-between gap-2 text-sm">
       <span className="text-zinc-500 dark:text-zinc-400">{label}</span>

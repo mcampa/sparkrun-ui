@@ -51,8 +51,22 @@ export function HostCard({
         </CardDescription>
       </CardHeader>
       <CardBody className="flex flex-col gap-3">
-        <Meter label="CPU" pct={cpu} history={history.cpu} icon={<Cpu size={14} />} tone="sky" right={cpuTemp != null && `${cpuTemp.toFixed(1)}°C`} />
-        <Meter label="GPU" pct={gpu} history={history.gpu} icon={<Zap size={14} />} tone="purple" right={gpuTemp != null && `${gpuTemp.toFixed(0)}°C`} />
+        <Meter
+          label="CPU"
+          pct={cpu}
+          history={history.cpu}
+          icon={<Cpu size={14} />}
+          tone="sky"
+          right={cpuTemp != null && `${cpuTemp.toFixed(1)}°C`}
+        />
+        <Meter
+          label="GPU"
+          pct={gpu}
+          history={history.gpu}
+          icon={<Zap size={14} />}
+          tone="purple"
+          right={gpuTemp != null && `${gpuTemp.toFixed(0)}°C`}
+        />
         <Meter
           label="Memory"
           pct={memPct}
@@ -68,13 +82,19 @@ export function HostCard({
             history={[]}
             icon={<Zap size={14} />}
             tone="amber"
-            right={gpuMemUsed != null && gpuMemTotal ? `${(gpuMemUsed / 1024).toFixed(1)}/${(gpuMemTotal / 1024).toFixed(0)} GB` : null}
+            right={
+              gpuMemUsed != null && gpuMemTotal
+                ? `${(gpuMemUsed / 1024).toFixed(1)}/${(gpuMemTotal / 1024).toFixed(0)} GB`
+                : null
+            }
           />
         )}
         <div className="flex flex-wrap items-center gap-2 pt-1 text-xs text-zinc-500 dark:text-zinc-400">
           {power != null && <Badge tone="neutral">{power.toFixed(1)} W</Badge>}
           {metrics.sparkrun_jobs && metrics.sparkrun_jobs !== "0" && (
-            <Badge tone="sky">{metrics.sparkrun_jobs} job{metrics.sparkrun_jobs === "1" ? "" : "s"}</Badge>
+            <Badge tone="sky">
+              {metrics.sparkrun_jobs} job{metrics.sparkrun_jobs === "1" ? "" : "s"}
+            </Badge>
           )}
         </div>
       </CardBody>

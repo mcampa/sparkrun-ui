@@ -1,7 +1,13 @@
 "use client";
 import { useEffect, useRef } from "react";
 import { EditorState, Compartment } from "@codemirror/state";
-import { EditorView, keymap, lineNumbers, highlightActiveLine, drawSelection } from "@codemirror/view";
+import {
+  EditorView,
+  keymap,
+  lineNumbers,
+  highlightActiveLine,
+  drawSelection,
+} from "@codemirror/view";
 import { yaml } from "@codemirror/lang-yaml";
 import { defaultKeymap, history, historyKeymap, indentWithTab } from "@codemirror/commands";
 import { linter, lintGutter, type Diagnostic } from "@codemirror/lint";
@@ -17,7 +23,10 @@ const baseExtensions = [
   lintGutter(),
   EditorView.theme({
     "&": { fontSize: "12px", height: "100%" },
-    ".cm-content": { fontFamily: "var(--font-geist-mono), ui-monospace, monospace", padding: "8px 0" },
+    ".cm-content": {
+      fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+      padding: "8px 0",
+    },
     ".cm-gutters": {
       backgroundColor: "transparent",
       color: "rgb(161 161 170)",
@@ -119,7 +128,9 @@ export function YamlEditor({
 function buildDiagnostics(view: EditorView, issues: ValidationIssue[]): Diagnostic[] {
   const docLines = view.state.doc.lines;
   return issues
-    .filter((i): i is ValidationIssue & { line: number } => typeof i.line === "number" && i.line > 0)
+    .filter(
+      (i): i is ValidationIssue & { line: number } => typeof i.line === "number" && i.line > 0,
+    )
     .map((i) => {
       const lineNum = Math.min(i.line, docLines);
       const line = view.state.doc.line(lineNum);

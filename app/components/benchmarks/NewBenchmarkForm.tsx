@@ -112,7 +112,10 @@ export function NewBenchmarkForm({
         >
           <Input value={concurrency} onChange={(e) => setConcurrency(e.target.value)} />
         </Field>
-        <Field label="Skip launching inference" help="Benchmark against an already-running instance">
+        <Field
+          label="Skip launching inference"
+          help="Benchmark against an already-running instance"
+        >
           <Switch checked={skipRun} onCheckedChange={setSkipRun} />
         </Field>
         <div className="flex justify-end">

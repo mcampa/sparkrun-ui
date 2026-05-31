@@ -66,7 +66,11 @@ export function MonitorLive() {
         <h1 className="text-2xl font-semibold tracking-tight">Cluster monitor</h1>
         <div className="flex items-center gap-2">
           <Badge tone={connected ? "green" : "amber"}>{connected ? "live" : "reconnecting…"}</Badge>
-          {tick && <Badge tone="neutral">{hosts.length} host{hosts.length === 1 ? "" : "s"}</Badge>}
+          {tick && (
+            <Badge tone="neutral">
+              {hosts.length} host{hosts.length === 1 ? "" : "s"}
+            </Badge>
+          )}
         </div>
       </div>
 

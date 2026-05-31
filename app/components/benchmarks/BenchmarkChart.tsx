@@ -11,11 +11,7 @@ const METRICS: { key: MetricKey; label: string; unit: string }[] = [
 
 export function BenchmarkChart({ rows }: { rows: ConsolidatedRow[] }) {
   if (!rows.length) {
-    return (
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">
-        No consolidated metrics yet.
-      </p>
-    );
+    return <p className="text-sm text-zinc-500 dark:text-zinc-400">No consolidated metrics yet.</p>;
   }
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -73,12 +69,7 @@ function Bars({
                   strokeWidth={1.5}
                 />
               )}
-              <text
-                x={x + 20}
-                y={135}
-                textAnchor="middle"
-                className="fill-zinc-500 text-[9px]"
-              >
+              <text x={x + 20} y={135} textAnchor="middle" className="fill-zinc-500 text-[9px]">
                 c={v.concurrency}
               </text>
               <text

@@ -72,7 +72,7 @@ export function RecipesBrowser({ recipes }: { recipes: RecipeListItem[] }) {
           <div className="relative w-full sm:w-72">
             <Search
               size={14}
-              className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400"
+              className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-zinc-400"
             />
             <Input
               value={search}
@@ -103,14 +103,12 @@ export function RecipesBrowser({ recipes }: { recipes: RecipeListItem[] }) {
           <section key={reg} className="flex flex-col gap-3">
             <h2 className="font-mono text-sm font-medium text-zinc-700 dark:text-zinc-300">
               @{reg}
-              <span className="ml-2 text-xs text-zinc-500 dark:text-zinc-500">
-                ({rows.length})
-              </span>
+              <span className="ml-2 text-xs text-zinc-500 dark:text-zinc-500">({rows.length})</span>
             </h2>
             <Card>
               <CardBody className="p-0">
                 <table className="w-full text-sm">
-                  <thead className="border-b border-zinc-200 bg-zinc-50 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400">
+                  <thead className="border-b border-zinc-200 bg-zinc-50 text-left text-xs font-medium tracking-wider text-zinc-500 uppercase dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400">
                     <tr>
                       <th className="px-4 py-2">Name</th>
                       <th className="px-4 py-2">Model</th>
@@ -127,7 +125,7 @@ export function RecipesBrowser({ recipes }: { recipes: RecipeListItem[] }) {
                             <button
                               type="button"
                               onClick={() => setOpenRecipe(r.name)}
-                              className="cursor-pointer underline decoration-dotted decoration-zinc-400 underline-offset-2 hover:text-sky-600 dark:hover:text-sky-400"
+                              className="cursor-pointer underline decoration-zinc-400 decoration-dotted underline-offset-2 hover:text-sky-600 dark:hover:text-sky-400"
                             >
                               {r.file}
                             </button>

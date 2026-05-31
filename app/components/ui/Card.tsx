@@ -29,10 +29,7 @@ export function CardHeader({ className, ...rest }: React.HTMLAttributes<HTMLDivE
 export function CardTitle({ className, ...rest }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
     <h3
-      className={cn(
-        "text-base font-semibold text-zinc-900 dark:text-zinc-100",
-        className,
-      )}
+      className={cn("text-base font-semibold text-zinc-900 dark:text-zinc-100", className)}
       {...rest}
     />
   );
@@ -42,12 +39,7 @@ export function CardDescription({
   className,
   ...rest
 }: React.HTMLAttributes<HTMLParagraphElement>) {
-  return (
-    <p
-      className={cn("text-sm text-zinc-500 dark:text-zinc-400", className)}
-      {...rest}
-    />
-  );
+  return <p className={cn("text-sm text-zinc-500 dark:text-zinc-400", className)} {...rest} />;
 }
 
 export function CardBody({ className, ...rest }: React.HTMLAttributes<HTMLDivElement>) {

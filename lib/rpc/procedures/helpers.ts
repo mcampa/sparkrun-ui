@@ -2,10 +2,7 @@ import { runSparkrunJson } from "@/lib/sparkrun";
 
 type ClusterEntry = { name: string; hosts: string[]; default: boolean };
 
-export async function resolveTargetHosts(
-  hosts?: string[],
-  cluster?: string,
-): Promise<string[]> {
+export async function resolveTargetHosts(hosts?: string[], cluster?: string): Promise<string[]> {
   if (hosts && hosts.length) return hosts;
   if (cluster) {
     const list = await runSparkrunJson<ClusterEntry[]>(["cluster", "list", "--json"]);

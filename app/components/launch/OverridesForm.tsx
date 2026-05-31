@@ -91,7 +91,10 @@ export function OverridesForm({
   );
 }
 
-function parseDefaults(yamlText: string): { defaults: Record<string, unknown>; fields: FieldDef[] } {
+function parseDefaults(yamlText: string): {
+  defaults: Record<string, unknown>;
+  fields: FieldDef[];
+} {
   try {
     const doc = parseDocument(yamlText);
     const defaults = (doc.get("defaults") as { toJSON?: () => unknown } | undefined)?.toJSON?.() as
@@ -102,11 +105,7 @@ function parseDefaults(yamlText: string): { defaults: Record<string, unknown>; f
       const value = defaults[key];
       const known = KNOWN[key] ?? {};
       const kind: FieldDef["kind"] =
-        typeof value === "boolean"
-          ? "boolean"
-          : typeof value === "number"
-            ? "number"
-            : "string";
+        typeof value === "boolean" ? "boolean" : typeof value === "number" ? "number" : "string";
       return { key, kind, ...known };
     });
     return { defaults, fields };

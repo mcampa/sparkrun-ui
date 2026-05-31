@@ -26,11 +26,7 @@ export function HoverCard({
 }) {
   return (
     <PreviewCard.Root onOpenChange={(open) => onOpenChange?.(open)}>
-      <PreviewCard.Trigger
-        render={<span className="inline-block" />}
-        delay={250}
-        closeDelay={150}
-      >
+      <PreviewCard.Trigger render={<span className="inline-block" />} delay={250} closeDelay={150}>
         {trigger}
       </PreviewCard.Trigger>
       <PreviewCard.Portal>

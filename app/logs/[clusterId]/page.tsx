@@ -5,11 +5,7 @@ import { Button } from "@/app/components/ui/Button";
 
 export const dynamic = "force-dynamic";
 
-export default async function LogsPage({
-  params,
-}: {
-  params: Promise<{ clusterId: string }>;
-}) {
+export default async function LogsPage({ params }: { params: Promise<{ clusterId: string }> }) {
   const { clusterId } = await params;
   return (
     <div className="flex flex-col gap-4">

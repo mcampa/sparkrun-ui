@@ -48,7 +48,7 @@ export default async function BenchmarksPage() {
         <Card>
           <CardBody className="p-0">
             <table className="w-full text-sm">
-              <thead className="border-b border-zinc-200 bg-zinc-50 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400">
+              <thead className="border-b border-zinc-200 bg-zinc-50 text-left text-xs font-medium tracking-wider text-zinc-500 uppercase dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400">
                 <tr>
                   <th className="px-4 py-2">ID</th>
                   <th className="px-4 py-2">Recipe</th>

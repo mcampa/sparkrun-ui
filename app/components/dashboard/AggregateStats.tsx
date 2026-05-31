@@ -123,14 +123,14 @@ export function AggregateStats() {
               Cluster overview
             </span>
             <span className="text-xs text-zinc-500">
-              · {agg.hostCount || "—"} host{agg.hostCount === 1 ? "" : "s"} ·{" "}
-              {agg.jobsTotal} job{agg.jobsTotal === 1 ? "" : "s"}
+              · {agg.hostCount || "—"} host{agg.hostCount === 1 ? "" : "s"} · {agg.jobsTotal} job
+              {agg.jobsTotal === 1 ? "" : "s"}
             </span>
           </div>
           <span
             className={
               "inline-flex h-2 w-2 rounded-full " +
-              (connected ? "bg-emerald-500 animate-pulse" : "bg-zinc-300")
+              (connected ? "animate-pulse bg-emerald-500" : "bg-zinc-300")
             }
             title={connected ? "live" : "reconnecting"}
           />

@@ -148,9 +148,7 @@ export function AlertDialog({
             )}
           </div>
           <div className="flex items-center justify-end gap-2 border-t border-zinc-200 px-6 py-3 dark:border-zinc-800">
-            <BaseAlertDialog.Close
-              render={<Button variant="ghost">{cancelLabel}</Button>}
-            />
+            <BaseAlertDialog.Close render={<Button variant="ghost">{cancelLabel}</Button>} />
             <Button
               variant={destructive ? "danger" : "primary"}
               onClick={async () => {

@@ -28,7 +28,11 @@ export const readYaml = os
   .input(z.object({ name: z.string().min(1) }))
   .output(z.object({ yaml: z.string(), path: z.string(), recipe: z.string() }))
   .handler(async ({ input }) => {
-    const recipes = (await runSparkrunJson<unknown>(["list", "--all", "--json"])) as RecipeListItem[];
+    const recipes = (await runSparkrunJson<unknown>([
+      "list",
+      "--all",
+      "--json",
+    ])) as RecipeListItem[];
     const found = recipes.find((r) => r.name === input.name);
     if (!found) {
       throw new ORPCError("NOT_FOUND", { message: `Recipe ${input.name} not found` });
@@ -87,7 +91,11 @@ export const info = os
     }),
   )
   .handler(async ({ input }) => {
-    const recipes = (await runSparkrunJson<unknown>(["list", "--all", "--json"])) as RecipeListItem[];
+    const recipes = (await runSparkrunJson<unknown>([
+      "list",
+      "--all",
+      "--json",
+    ])) as RecipeListItem[];
     const found = recipes.find((r) => r.name === input.name);
     const description = found?.description ?? "";
     const registry = found?.registry ?? "";
@@ -96,13 +104,25 @@ export const info = os
     if (input.tp) args.push("--tp", String(input.tp));
     const r = await runSparkrun(args);
     if (r.code !== 0) {
-      return { name: input.name, description, registry, vram: null, vramError: r.stderr.trim() || "vram failed" };
+      return {
+        name: input.name,
+        description,
+        registry,
+        vram: null,
+        vramError: r.stderr.trim() || "vram failed",
+      };
     }
     try {
       const vram = VramSchema.parse(JSON.parse(r.stdout));
       return { name: input.name, description, registry, vram, vramError: null };
     } catch {
-      return { name: input.name, description, registry, vram: null, vramError: "could not parse vram output" };
+      return {
+        name: input.name,
+        description,
+        registry,
+        vram: null,
+        vramError: "could not parse vram output",
+      };
     }
   });
 
@@ -151,7 +171,9 @@ export const validate = os
     let portLine: number | undefined;
     try {
       const doc = parseDocument(input.yaml);
-      const portNode = doc.getIn(["defaults", "port"], true) as { value?: unknown; range?: [number, number] } | undefined;
+      const portNode = doc.getIn(["defaults", "port"], true) as
+        | { value?: unknown; range?: [number, number] }
+        | undefined;
       const portValue = doc.getIn(["defaults", "port"]);
       if (typeof portValue === "number") {
         port = portValue;
@@ -168,7 +190,11 @@ export const validate = os
 
     if (port && hosts.length) {
       const status = await runSparkrunJson<{
-        solo_entries?: { cluster_id: string; host?: string; meta?: { port?: number; recipe?: string } }[];
+        solo_entries?: {
+          cluster_id: string;
+          host?: string;
+          meta?: { port?: number; recipe?: string };
+        }[];
       }>(["cluster", "status", "--json"]);
       const running = status.solo_entries ?? [];
       for (const w of running) {

@@ -9,13 +9,7 @@ type Info = Awaited<ReturnType<typeof rpc.recipes.info>>;
 
 const cache = new Map<string, Info | Promise<Info>>();
 
-export function RecipeInfoPopover({
-  name,
-  children,
-}: {
-  name: string;
-  children: React.ReactNode;
-}) {
+export function RecipeInfoPopover({ name, children }: { name: string; children: React.ReactNode }) {
   const [info, setInfo] = useState<Info | null>(() => {
     const cached = cache.get(name);
     return cached && !("then" in cached) ? cached : null;
@@ -65,7 +59,7 @@ export function RecipeInfoPopover({
           {info?.description ? (
             <span className="text-xs text-zinc-600 dark:text-zinc-400">{info.description}</span>
           ) : info && !loading ? (
-            <span className="text-xs italic text-zinc-400">No description</span>
+            <span className="text-xs text-zinc-400 italic">No description</span>
           ) : null}
         </div>
 
@@ -151,7 +145,9 @@ function Row({
       <dd
         className={
           "text-right font-mono " +
-          (bold ? "text-zinc-900 dark:text-zinc-100 font-semibold" : "text-zinc-700 dark:text-zinc-300")
+          (bold
+            ? "font-semibold text-zinc-900 dark:text-zinc-100"
+            : "text-zinc-700 dark:text-zinc-300")
         }
       >
         {value}

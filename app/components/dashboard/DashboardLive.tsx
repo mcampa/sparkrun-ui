@@ -44,16 +44,16 @@ export function DashboardLive({ initial }: { initial: ClusterStatus }) {
             {status.host_count} host{status.host_count === 1 ? "" : "s"}
           </Badge>
           <Badge tone="green">{status.total_containers} running</Badge>
-          <Badge tone={connected ? "neutral" : "amber"}>{connected ? "live" : "reconnecting…"}</Badge>
+          <Badge tone={connected ? "neutral" : "amber"}>
+            {connected ? "live" : "reconnecting…"}
+          </Badge>
         </div>
       </div>
 
       <AggregateStats />
 
       <div className="flex flex-col gap-3">
-        <h2 className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-          Workloads
-        </h2>
+        <h2 className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Workloads</h2>
         {status.solo_entries.length === 0 ? (
           <Card>
             <CardBody className="text-sm text-zinc-500 dark:text-zinc-400">

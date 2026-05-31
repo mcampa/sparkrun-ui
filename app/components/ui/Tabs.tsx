@@ -14,13 +14,23 @@ export function Tabs({
   className?: string;
 }) {
   return (
-    <BaseTabs.Root value={value} onValueChange={(v) => onValueChange(String(v))} className={className}>
+    <BaseTabs.Root
+      value={value}
+      onValueChange={(v) => onValueChange(String(v))}
+      className={className}
+    >
       {children}
     </BaseTabs.Root>
   );
 }
 
-Tabs.List = function TabsList({ children, className }: { children: React.ReactNode; className?: string }) {
+Tabs.List = function TabsList({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
     <BaseTabs.List
       className={cn(
@@ -33,13 +43,7 @@ Tabs.List = function TabsList({ children, className }: { children: React.ReactNo
   );
 };
 
-Tabs.Tab = function TabsTab({
-  value,
-  children,
-}: {
-  value: string;
-  children: React.ReactNode;
-}) {
+Tabs.Tab = function TabsTab({ value, children }: { value: string; children: React.ReactNode }) {
   return (
     <BaseTabs.Tab
       value={value}

@@ -69,16 +69,18 @@ export const RecipeValidateResultSchema = z.object({
 });
 export type RecipeValidateResult = z.infer<typeof RecipeValidateResultSchema>;
 
-export const MonitorTickSchema = z.object({
-  host: z.string(),
-  ts: z.string().optional(),
-  cpu_pct: z.number().optional(),
-  ram_used_gb: z.number().optional(),
-  ram_total_gb: z.number().optional(),
-  gpu_pct: z.number().optional(),
-  gpu_mem_used_gb: z.number().optional(),
-  gpu_mem_total_gb: z.number().optional(),
-}).passthrough();
+export const MonitorTickSchema = z
+  .object({
+    host: z.string(),
+    ts: z.string().optional(),
+    cpu_pct: z.number().optional(),
+    ram_used_gb: z.number().optional(),
+    ram_total_gb: z.number().optional(),
+    gpu_pct: z.number().optional(),
+    gpu_mem_used_gb: z.number().optional(),
+    gpu_mem_total_gb: z.number().optional(),
+  })
+  .passthrough();
 export type MonitorTick = z.infer<typeof MonitorTickSchema>;
 
 export const ClusterEntrySchema = z.object({

@@ -31,9 +31,7 @@ export function NumberField({
         <BaseNumberField.Decrement className="rounded-l-md border border-r-0 border-zinc-300 bg-zinc-50 px-2 text-zinc-600 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
           −
         </BaseNumberField.Decrement>
-        <BaseNumberField.Input
-          className={cn(inputCls, "rounded-none border-x-0 text-center")}
-        />
+        <BaseNumberField.Input className={cn(inputCls, "rounded-none border-x-0 text-center")} />
         <BaseNumberField.Increment className="rounded-r-md border border-l-0 border-zinc-300 bg-zinc-50 px-2 text-zinc-600 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
           +
         </BaseNumberField.Increment>

@@ -29,9 +29,7 @@ export function Field({
           {help}
         </BaseField.Description>
       )}
-      {error && (
-        <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
-      )}
+      {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
     </BaseField.Root>
   );
 }
@@ -42,8 +40,9 @@ export const inputCls =
   "focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/30 " +
   "dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500";
 
-export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
-  function Input({ className, ...rest }, ref) {
-    return <input ref={ref} className={cn(inputCls, className)} {...rest} />;
-  },
-);
+export const Input = React.forwardRef<
+  HTMLInputElement,
+  React.InputHTMLAttributes<HTMLInputElement>
+>(function Input({ className, ...rest }, ref) {
+  return <input ref={ref} className={cn(inputCls, className)} {...rest} />;
+});

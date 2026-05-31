@@ -50,12 +50,17 @@ export function LaunchWizard({
   const [validating, setValidating] = useState(false);
   const [validatedOnce, setValidatedOnce] = useState(false);
 
-  const [preview, setPreview] = useState<{ ok: boolean; stdout: string; stderr: string } | null>(null);
+  const [preview, setPreview] = useState<{ ok: boolean; stdout: string; stderr: string } | null>(
+    null,
+  );
   const [previewing, setPreviewing] = useState(false);
 
   const [launching, setLaunching] = useState(false);
 
-  const recipesByName = useMemo(() => Object.fromEntries(recipes.map((r) => [r.name, r])), [recipes]);
+  const recipesByName = useMemo(
+    () => Object.fromEntries(recipes.map((r) => [r.name, r])),
+    [recipes],
+  );
   const recipeOptions = useMemo(
     () =>
       recipes.map((r) => ({
@@ -75,21 +80,18 @@ export function LaunchWizard({
     [clusters],
   );
 
-  const loadRecipe = useCallback(
-    async (name: string) => {
-      try {
-        const result = await rpc.recipes.readYaml({ name });
-        setYamlText(result.yaml);
-        setIssues([]);
-        setValidatedOnce(false);
-        setPreview(null);
-        setStep("edit");
-      } catch (err) {
-        toast.error("Could not load recipe", err instanceof Error ? err.message : String(err));
-      }
-    },
-    [],
-  );
+  const loadRecipe = useCallback(async (name: string) => {
+    try {
+      const result = await rpc.recipes.readYaml({ name });
+      setYamlText(result.yaml);
+      setIssues([]);
+      setValidatedOnce(false);
+      setPreview(null);
+      setStep("edit");
+    } catch (err) {
+      toast.error("Could not load recipe", err instanceof Error ? err.message : String(err));
+    }
+  }, []);
 
   // One-shot: if the page was opened with ?recipe=… (initialRecipe),
   // fetch the YAML on mount.
@@ -153,7 +155,10 @@ export function LaunchWizard({
         draftId,
         cluster: cluster || undefined,
       });
-      toast.success("Launch requested", `${selected} is starting on ${cluster || "default cluster"}`);
+      toast.success(
+        "Launch requested",
+        `${selected} is starting on ${cluster || "default cluster"}`,
+      );
       router.push("/dashboard");
     } catch (err) {
       toast.error("Launch failed", err instanceof Error ? err.message : String(err));
@@ -258,7 +263,8 @@ export function LaunchWizard({
             <div>
               <CardTitle className="font-mono text-sm">{selected}</CardTitle>
               <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                {recipesByName[selected ?? ""]?.model} · cluster <span className="font-mono">{cluster || "default"}</span>
+                {recipesByName[selected ?? ""]?.model} · cluster{" "}
+                <span className="font-mono">{cluster || "default"}</span>
               </p>
             </div>
             <Button size="sm" onClick={generatePreview} disabled={previewing}>
@@ -312,11 +318,7 @@ export function LaunchWizard({
               </Button>
             )}
             {step === "preview" && (
-              <Button
-                variant="primary"
-                disabled={!preview?.ok}
-                onClick={() => setStep("confirm")}
-              >
+              <Button variant="primary" disabled={!preview?.ok} onClick={() => setStep("confirm")}>
                 Continue
                 <ArrowRight size={14} />
               </Button>

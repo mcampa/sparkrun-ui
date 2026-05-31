@@ -37,14 +37,11 @@ export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   size?: Size;
 };
 
-export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  function Button({ variant = "secondary", size = "md", className, ...rest }, ref) {
-    return (
-      <button
-        ref={ref}
-        className={cn(base, variants[variant], sizes[size], className)}
-        {...rest}
-      />
-    );
-  },
-);
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
+  { variant = "secondary", size = "md", className, ...rest },
+  ref,
+) {
+  return (
+    <button ref={ref} className={cn(base, variants[variant], sizes[size], className)} {...rest} />
+  );
+});
