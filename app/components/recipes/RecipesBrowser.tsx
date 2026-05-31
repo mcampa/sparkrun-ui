@@ -195,12 +195,19 @@ export function RecipesBrowser({
                           </span>
                         </td>
                         <td className="px-4 py-2 text-right">
-                          <Link href={`/launch?recipe=${encodeURIComponent(r.name)}`}>
-                            <Button size="sm" variant="primary">
+                          {running.has(r.name) ? (
+                            <Button size="sm" variant="success" disabled>
                               <Rocket size={12} />
-                              Launch
+                              Running
                             </Button>
-                          </Link>
+                          ) : (
+                            <Link href={`/launch?recipe=${encodeURIComponent(r.name)}`}>
+                              <Button size="sm" variant="success">
+                                <Rocket size={12} />
+                                Launch
+                              </Button>
+                            </Link>
+                          )}
                         </td>
                       </tr>
                     ))}
