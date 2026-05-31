@@ -34,6 +34,16 @@ const baseExtensions = [
     },
     "&.cm-focused": { outline: "none" },
     ".cm-lintRange-error": { backgroundImage: "none", borderBottom: "2px wavy rgb(220 38 38)" },
+    ".cm-tooltip": {
+      backgroundColor: "rgb(24 24 27)",
+      color: "rgb(250 250 250)",
+      border: "1px solid rgb(63 63 70)",
+      borderRadius: "6px",
+      padding: "4px 8px",
+      fontSize: "12px",
+      maxWidth: "320px",
+    },
+    ".cm-tooltip.cm-tooltip-lint": {},
   }),
 ];
 
