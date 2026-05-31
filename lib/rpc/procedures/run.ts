@@ -1,6 +1,6 @@
 import { os, ORPCError } from "@orpc/server";
 import { z } from "zod";
-import { writeDraft } from "@/lib/draft";
+import { writeDraft, writeDraftMeta } from "@/lib/draft";
 import { fireAndForgetSparkrun, runSparkrun } from "@/lib/sparkrun";
 
 export const start = os
@@ -11,11 +11,15 @@ export const start = os
       hosts: z.array(z.string()).optional(),
       cluster: z.string().optional(),
       tp: z.number().int().min(1).optional(),
+      recipeName: z.string().optional(),
     }),
   )
   .output(z.object({ ok: z.literal(true), draftPath: z.string() }))
   .handler(async ({ input }) => {
     const path = await writeDraft(input.draftId, input.yaml);
+    if (input.recipeName) {
+      await writeDraftMeta(input.draftId, { recipeName: input.recipeName });
+    }
 
     const validate = await runSparkrun(["recipe", "validate", path, "--json"]);
     if (validate.code !== 0) {

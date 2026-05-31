@@ -154,6 +154,7 @@ export function LaunchWizard({
         yaml: yamlText,
         draftId,
         cluster: cluster || undefined,
+        recipeName: selected ?? undefined,
       });
       toast.success(
         "Launch requested",
