@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Play, Loader2 } from "lucide-react";
 import { Card, CardBody, CardHeader, CardTitle } from "@/app/components/ui/Card";
@@ -13,29 +13,41 @@ import type { ClusterEntry, RecipeListItem } from "@/lib/schemas";
 
 type Profile = { name: string; registry: string; framework: string };
 
+function firstRunning(recipes: RecipeListItem[], running: Set<string>): string | null {
+  for (const r of recipes) {
+    if (running.has(r.name)) return r.name;
+  }
+  return null;
+}
+
 export function NewBenchmarkForm({
   recipes,
   clusters,
   profiles,
   defaultClusterName,
+  runningRecipes,
 }: {
   recipes: RecipeListItem[];
   clusters: ClusterEntry[];
   profiles: Profile[];
   defaultClusterName: string | null;
+  runningRecipes: string[];
 }) {
+  const running = useMemo(() => new Set(runningRecipes), [runningRecipes]);
+  const defaultRecipe = firstRunning(recipes, running);
   const router = useRouter();
-  const [recipe, setRecipe] = useState<string | null>(null);
+  const [recipe, setRecipe] = useState<string | null>(defaultRecipe);
   const [cluster, setCluster] = useState<string>(defaultClusterName ?? clusters[0]?.name ?? "");
   const [profile, setProfile] = useState<string | null>(null);
   const [concurrency, setConcurrency] = useState("5");
-  const [skipRun, setSkipRun] = useState(false);
+  const [skipRun, setSkipRun] = useState(defaultRecipe !== null);
   const [submitting, setSubmitting] = useState(false);
 
   const recipeOptions = recipes.map((r) => ({
     value: r.name,
     label: r.name,
     description: `${r.runtime} · ${r.model}`,
+    badge: running.has(r.name) ? { text: "running", tone: "green" as const } : undefined,
   }));
   const clusterOptions = clusters.map((c) => ({
     value: c.name,

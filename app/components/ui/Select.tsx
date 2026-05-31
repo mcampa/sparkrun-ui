@@ -3,7 +3,12 @@ import { Select as BaseSelect } from "@base-ui/react/select";
 import { ChevronDown, Check } from "lucide-react";
 import { cn } from "@/lib/cn";
 
-export type SelectOption = { value: string; label: string; description?: string };
+export type SelectOption = {
+  value: string;
+  label: string;
+  description?: string;
+  badge?: { text: string; tone?: "green" | "sky" | "amber" | "red" | "neutral" };
+};
 
 export function Select({
   value,
@@ -55,6 +60,17 @@ export function Select({
                     </span>
                   )}
                 </div>
+                {opt.badge && (
+                  <span
+                    className={`ml-auto shrink-0 rounded-full px-1.5 py-0.5 text-[10px] leading-none font-medium ${
+                      opt.badge.tone === "green"
+                        ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+                        : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
+                    }`}
+                  >
+                    {opt.badge.text}
+                  </span>
+                )}
               </BaseSelect.Item>
             ))}
           </BaseSelect.Popup>
