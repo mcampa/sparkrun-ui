@@ -76,6 +76,7 @@ function coerceNumbers(obj: unknown): unknown {
   if (obj == null || typeof obj !== "object") return obj;
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
+    if (v == null) continue;
     if (typeof v === "string" && numericFields.includes(k)) {
       const n = Number(v);
       out[k] = Number.isFinite(n) ? n : v;
