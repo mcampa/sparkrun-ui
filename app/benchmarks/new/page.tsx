@@ -35,8 +35,8 @@ export default async function NewBenchmarkPage() {
       // Fallback: match by recipe_state._raw.name -> r.file
       const rawName = (
         (w.meta?.recipe_state as Record<string, unknown> | undefined)?._raw as
-        | Record<string, unknown>
-        | undefined
+          | Record<string, unknown>
+          | undefined
       )?.name;
       if (typeof rawName === "string") {
         const byFile = recipes.find((r) => r.file === rawName);
