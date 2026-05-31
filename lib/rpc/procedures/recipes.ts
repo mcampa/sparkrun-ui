@@ -110,6 +110,11 @@ const VramSchema = z.object({
   warnings: z.array(z.string()).default([]),
 });
 
+/** Parse sparkrun `recipe vram --json` output, coercing string-typed numbers. */
+export function parseRecipeVramJson(raw: unknown) {
+  return VramSchema.parse(coerceNumbers(raw));
+}
+
 export const info = os
   .input(z.object({ name: z.string().min(1), tp: z.number().int().min(1).optional() }))
   .output(
@@ -145,7 +150,7 @@ export const info = os
     }
     try {
       const raw = JSON.parse(r.stdout);
-      const vram = VramSchema.parse(coerceNumbers(raw));
+      const vram = parseRecipeVramJson(raw);
       return { name: input.name, description, registry, vram, vramError: null };
     } catch {
       return {
