@@ -4,7 +4,7 @@ import { ScrollText } from "lucide-react";
 import { rpc } from "@/lib/rpc/client";
 import { Switch } from "@/app/components/ui/Switch";
 
-type Line = { line: string; ts: string };
+type Line = { line: string; ts: string; stream?: "out" | "err" | "meta" };
 
 export function LogStream({ clusterId, tail = 200 }: { clusterId: string; tail?: number }) {
   const [lines, setLines] = useState<Line[]>([]);
@@ -77,7 +77,17 @@ export function LogStream({ clusterId, tail = 200 }: { clusterId: string; tail?:
           <p className="text-zinc-500">Waiting for log output…</p>
         ) : (
           lines.map((l, i) => (
-            <div key={i} className="whitespace-pre-wrap">
+            <div
+              key={i}
+              className={
+                "whitespace-pre-wrap " +
+                (l.stream === "meta"
+                  ? "text-zinc-500 italic"
+                  : l.stream === "err"
+                    ? "text-red-300"
+                    : "")
+              }
+            >
               {l.line}
             </div>
           ))

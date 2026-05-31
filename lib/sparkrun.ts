@@ -89,15 +89,69 @@ export function spawnSparkrun(args: string[]): SparkrunChild {
 
 export async function* streamSparkrunLines(
   args: string[],
-  opts: { signal?: AbortSignal } = {},
+  opts: { signal?: AbortSignal; includeStderr?: boolean } = {},
 ): AsyncGenerator<string> {
   const child = spawnSparkrun(args);
   const onAbort = () => child.kill("SIGTERM");
   opts.signal?.addEventListener("abort", onAbort, { once: true });
-  const rl = createInterface({ input: child.stdout });
+
+  const queue: string[] = [];
+  let resolveNext: (() => void) | null = null;
+  let done = false;
+
+  const push = (line: string) => {
+    queue.push(line);
+    if (resolveNext) {
+      const r = resolveNext;
+      resolveNext = null;
+      r();
+    }
+  };
+
+  const stdoutRl = createInterface({ input: child.stdout });
+  stdoutRl.on("line", push);
+  stdoutRl.on("close", () => {
+    if (!opts.includeStderr) {
+      done = true;
+      if (resolveNext) resolveNext();
+    }
+  });
+
+  let stderrClosed = !opts.includeStderr;
+  if (opts.includeStderr) {
+    const stderrRl = createInterface({ input: child.stderr });
+    stderrRl.on("line", push);
+    stderrRl.on("close", () => {
+      stderrClosed = true;
+    });
+  }
+
+  child.on("close", () => {
+    if (stderrClosed) {
+      done = true;
+      if (resolveNext) resolveNext();
+    } else {
+      // wait for stderr drain
+      const check = setInterval(() => {
+        if (stderrClosed) {
+          clearInterval(check);
+          done = true;
+          if (resolveNext) resolveNext();
+        }
+      }, 50);
+    }
+  });
+
   try {
-    for await (const line of rl) {
-      yield line;
+    while (true) {
+      if (queue.length) {
+        yield queue.shift()!;
+        continue;
+      }
+      if (done) break;
+      await new Promise<void>((r) => {
+        resolveNext = r;
+      });
     }
   } finally {
     opts.signal?.removeEventListener("abort", onAbort);
