@@ -2,8 +2,7 @@
 import { useState, useTransition } from "react";
 import { Square, ScrollText } from "lucide-react";
 import Link from "next/link";
-import { Card, CardBody, CardHeader, CardTitle, CardDescription } from "@/app/components/ui/Card";
-import { Badge } from "@/app/components/ui/Badge";
+import { Card, CardBody, CardHeader, CardTitle } from "@/app/components/ui/Card";
 import { Button } from "@/app/components/ui/Button";
 import { AlertDialog } from "@/app/components/ui/Dialog";
 import { toast } from "@/app/components/ui/Toast";
@@ -22,9 +21,7 @@ export function WorkloadCard({
   const [recipeOpen, setRecipeOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  const tp = (workload.meta.overrides as { tensor_parallel?: number } | undefined)?.tensor_parallel;
   const label = workload.meta.model || workload.meta.recipe || workload.cluster_id;
-  const sub = workload.meta.model ? (workload.meta.recipe ?? workload.cluster_id) : undefined;
 
   const handleStop = () => {
     startTransition(async () => {
@@ -42,28 +39,50 @@ export function WorkloadCard({
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="font-mono text-sm">{label}</CardTitle>
-          {sub && <CardDescription>{sub}</CardDescription>}
+          <CardTitle className="text-sm font-semibold">{label}</CardTitle>
         </CardHeader>
         <CardBody className="flex flex-col gap-3 text-sm">
-          <div className="flex flex-wrap gap-2">
+          <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
             {recipeName && (
-              <button
-                type="button"
-                onClick={() => setRecipeOpen(true)}
-                className="inline-flex cursor-pointer items-center gap-1 rounded bg-sky-100 px-1.5 py-0.5 text-xs font-medium text-sky-700 hover:underline dark:bg-sky-950 dark:text-sky-300"
-              >
-                {recipeName}
-              </button>
+              <>
+                <dt className="text-zinc-500 dark:text-zinc-400">Recipe</dt>
+                <dd>
+                  <button
+                    type="button"
+                    onClick={() => setRecipeOpen(true)}
+                    className="cursor-pointer font-medium text-sky-600 hover:underline dark:text-sky-400"
+                  >
+                    {recipeName}
+                  </button>
+                </dd>
+              </>
             )}
-            {workload.meta.port && <Badge tone="purple">port {workload.meta.port}</Badge>}
-            {tp && <Badge tone="sky">tp={tp}</Badge>}
-            {workload.host && <Badge tone="neutral">{workload.host}</Badge>}
-            {workload.status && <Badge tone="green">{workload.status}</Badge>}
-          </div>
-          <div className="font-mono text-xs text-zinc-500 dark:text-zinc-400">
-            {workload.cluster_id}
-          </div>
+            {workload.meta.port && (
+              <>
+                <dt className="text-zinc-500 dark:text-zinc-400">Port</dt>
+                <dd className="font-mono text-zinc-700 dark:text-zinc-300">{workload.meta.port}</dd>
+              </>
+            )}
+            {workload.host && (
+              <>
+                <dt className="text-zinc-500 dark:text-zinc-400">Host</dt>
+                <dd className="font-mono text-zinc-700 dark:text-zinc-300">{workload.host}</dd>
+              </>
+            )}
+            {workload.status && (
+              <>
+                <dt className="text-zinc-500 dark:text-zinc-400">Status</dt>
+                <dd>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    <span className="text-zinc-700 capitalize dark:text-zinc-300">
+                      {workload.status}
+                    </span>
+                  </span>
+                </dd>
+              </>
+            )}
+          </dl>
           <div className="flex justify-end gap-2 pt-2">
             <Link href={`/logs/${workload.cluster_id}`}>
               <Button variant="ghost" size="sm">
@@ -104,6 +123,7 @@ export function WorkloadCard({
           name={recipeName}
           open={recipeOpen}
           onOpenChange={(o) => !o && setRecipeOpen(false)}
+          showLaunch={false}
         />
       )}
     </>
