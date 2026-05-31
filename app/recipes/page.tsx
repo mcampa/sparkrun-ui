@@ -26,7 +26,18 @@ export default async function RecipesPage() {
         const meta = await readDraftMeta(draftMatch[1]);
         if (meta?.recipeName) {
           runningRecipes.push(meta.recipeName);
+          continue;
         }
+      }
+      // Fallback: match by recipe_state._raw.name -> r.file
+      const rawName = (
+        (w.meta?.recipe_state as Record<string, unknown> | undefined)?._raw as
+        | Record<string, unknown>
+        | undefined
+      )?.name;
+      if (typeof rawName === "string") {
+        const byFile = recipes.find((r) => r.file === rawName);
+        if (byFile) runningRecipes.push(byFile.name);
       }
     }
   }
