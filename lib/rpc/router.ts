@@ -19,6 +19,7 @@ export const router = {
     list: recipes.list,
     readYaml: recipes.readYaml,
     show: recipes.show,
+    info: recipes.info,
     validate: recipes.validate,
     dryRun: recipes.dryRun,
   },

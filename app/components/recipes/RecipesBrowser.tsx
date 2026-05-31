@@ -8,10 +8,13 @@ import { Button } from "@/app/components/ui/Button";
 import { Select } from "@/app/components/ui/Select";
 import { Input } from "@/app/components/ui/Field";
 import type { RecipeListItem } from "@/lib/schemas";
+import { RecipeInfoPopover } from "./RecipeInfoPopover";
+import { RecipeShowDialog } from "./RecipeShowDialog";
 
 export function RecipesBrowser({ recipes }: { recipes: RecipeListItem[] }) {
   const [registry, setRegistry] = useState<string>("all");
   const [search, setSearch] = useState("");
+  const [openRecipe, setOpenRecipe] = useState<string | null>(null);
 
   const registries = useMemo(() => {
     const set = new Set<string>();
@@ -81,6 +84,14 @@ export function RecipesBrowser({ recipes }: { recipes: RecipeListItem[] }) {
         </div>
       </div>
 
+      {openRecipe && (
+        <RecipeShowDialog
+          name={openRecipe}
+          open={true}
+          onOpenChange={(o) => !o && setOpenRecipe(null)}
+        />
+      )}
+
       {byRegistry.length === 0 ? (
         <Card>
           <CardBody className="text-sm text-zinc-500 dark:text-zinc-400">
@@ -111,7 +122,17 @@ export function RecipesBrowser({ recipes }: { recipes: RecipeListItem[] }) {
                   <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
                     {rows.map((r) => (
                       <tr key={r.name} className="hover:bg-zinc-50 dark:hover:bg-zinc-950">
-                        <td className="px-4 py-2 font-mono text-xs">{r.file}</td>
+                        <td className="px-4 py-2 font-mono text-xs">
+                          <RecipeInfoPopover name={r.name}>
+                            <button
+                              type="button"
+                              onClick={() => setOpenRecipe(r.name)}
+                              className="cursor-pointer underline decoration-dotted decoration-zinc-400 underline-offset-2 hover:text-sky-600 dark:hover:text-sky-400"
+                            >
+                              {r.file}
+                            </button>
+                          </RecipeInfoPopover>
+                        </td>
                         <td className="px-4 py-2 font-mono text-xs text-zinc-600 dark:text-zinc-400">
                           {r.model}
                         </td>

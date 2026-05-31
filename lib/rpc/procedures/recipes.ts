@@ -51,6 +51,61 @@ export const show = os
     return { text: r.stdout };
   });
 
+const VramSchema = z.object({
+  recipe: z.string(),
+  model: z.string(),
+  runtime: z.string(),
+  model_weights_gb: z.number().optional(),
+  kv_cache_total_gb: z.number().optional(),
+  total_per_gpu_gb: z.number().optional(),
+  max_model_len: z.number().optional(),
+  tensor_parallel: z.number().optional(),
+  model_params: z.number().optional(),
+  model_dtype: z.string().optional(),
+  kv_dtype: z.string().optional(),
+  num_layers: z.number().optional(),
+  num_kv_heads: z.number().optional(),
+  head_dim: z.number().optional(),
+  gpu_memory_utilization: z.number().optional(),
+  usable_gpu_memory_gb: z.number().optional(),
+  available_kv_gb: z.number().optional(),
+  max_context_tokens: z.number().optional(),
+  context_multiplier: z.number().optional(),
+  fits_dgx_spark: z.boolean().optional(),
+  warnings: z.array(z.string()).default([]),
+});
+
+export const info = os
+  .input(z.object({ name: z.string().min(1), tp: z.number().int().min(1).optional() }))
+  .output(
+    z.object({
+      name: z.string(),
+      description: z.string(),
+      registry: z.string(),
+      vram: VramSchema.nullable(),
+      vramError: z.string().nullable(),
+    }),
+  )
+  .handler(async ({ input }) => {
+    const recipes = (await runSparkrunJson<unknown>(["list", "--all", "--json"])) as RecipeListItem[];
+    const found = recipes.find((r) => r.name === input.name);
+    const description = found?.description ?? "";
+    const registry = found?.registry ?? "";
+
+    const args = ["recipe", "vram", input.name, "--json"];
+    if (input.tp) args.push("--tp", String(input.tp));
+    const r = await runSparkrun(args);
+    if (r.code !== 0) {
+      return { name: input.name, description, registry, vram: null, vramError: r.stderr.trim() || "vram failed" };
+    }
+    try {
+      const vram = VramSchema.parse(JSON.parse(r.stdout));
+      return { name: input.name, description, registry, vram, vramError: null };
+    } catch {
+      return { name: input.name, description, registry, vram: null, vramError: "could not parse vram output" };
+    }
+  });
+
 export const validate = os
   .input(
     z.object({
