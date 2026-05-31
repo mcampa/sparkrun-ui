@@ -6,6 +6,7 @@ import * as run from "./procedures/run";
 import * as benchmarks from "./procedures/benchmarks";
 import * as logs from "./procedures/logs";
 import * as monitor from "./procedures/monitor";
+import * as chat from "./procedures/chat";
 
 export const router = {
   status: {
@@ -41,6 +42,9 @@ export const router = {
   },
   monitor: {
     stream: monitor.stream,
+  },
+  chat: {
+    stream: chat.stream,
   },
 };
 
