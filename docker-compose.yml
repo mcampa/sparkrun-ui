@@ -1,0 +1,31 @@
+# Convenience compose file. `docker compose up -d` and you're done.
+#
+# Defaults assume a single-host setup where the UI runs on the same machine
+# as the DGX Spark and talks to a 127.0.0.1 cluster. For a multi-host setup
+# point your sparkrun cluster definitions at the LAN IPs and switch to a
+# regular bridge network (comment out `network_mode: host` and uncomment the
+# `ports:` block).
+services:
+  sparkrun-ui:
+    image: ghcr.io/mcampa/sparkrun-ui:latest
+    container_name: sparkrun-ui
+    restart: unless-stopped
+
+    # `host` networking is required when the cluster contains 127.0.0.1 — the
+    # container's loopback otherwise points back at itself, not the host.
+    network_mode: host
+    # ports:
+    #   - "3000:3000"
+
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+
+    volumes:
+      # SSH keys that sparkrun uses to reach cluster hosts. Read-only mount.
+      - ${HOME}/.ssh:/home/app/.ssh:ro
+      # sparkrun config (saved clusters, registries) lives here.
+      - ${HOME}/.config/sparkrun:/home/app/.config/sparkrun
+      # sparkrun cache (registries, jobs, benchmarks) — bind-mount so results
+      # survive container restarts AND so the host CLI and the UI share state.
+      - ${HOME}/.cache/sparkrun:/home/app/.cache/sparkrun

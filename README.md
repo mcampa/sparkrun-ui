@@ -53,15 +53,79 @@ The backend is the `sparkrun` CLI itself, shelled out via
 `child_process.spawn`. The UI also reads `~/.cache/sparkrun/{jobs,benchmarks}`
 directly when richer state is needed.
 
-## Requirements
+## Run with Docker (recommended)
 
-- Node.js 20+
-- pnpm 10+
-- `sparkrun` CLI on `PATH` (`SPARKRUN_BIN` env var to override)
-- A reachable cluster — either the default cluster
-  (`sparkrun cluster default`) or one resolvable via `--cluster` / `--hosts`
+A multi-arch image (`linux/amd64` + `linux/arm64`) is published to
+[`ghcr.io/mcampa/sparkrun-ui`](https://github.com/mcampa/sparkrun-ui/pkgs/container/sparkrun-ui)
+on every push to `main`. The image bundles sparkrun (installed via `uv`) and
+the SSH client it needs.
 
-## Getting started
+### Prerequisites
+
+- An SSH key that can reach every host in your cluster (sparkrun ssh's to each
+  host to run `docker ps`, `docker logs`, etc.)
+- A saved sparkrun cluster definition. From the host run `sparkrun cluster
+  create <name> --hosts <ip1>,<ip2>` once.
+- Docker installed on every cluster host (not on the UI host).
+
+### Quick start — single DGX (cluster contains `127.0.0.1`)
+
+```bash
+docker run -d --name sparkrun-ui \
+  --restart unless-stopped \
+  --network host \
+  -v ~/.ssh:/home/app/.ssh:ro \
+  -v ~/.config/sparkrun:/home/app/.config/sparkrun \
+  -v ~/.cache/sparkrun:/home/app/.cache/sparkrun \
+  ghcr.io/mcampa/sparkrun-ui:latest
+```
+
+Open <http://localhost:3000>.
+
+`--network host` is required when your cluster references `127.0.0.1` — the
+container's loopback otherwise points back at itself, not the host.
+
+### Quick start — multi-host / remote cluster
+
+If your sparkrun cluster definition uses LAN IPs (e.g. `192.168.0.40,
+192.168.0.41`), bridge networking works fine:
+
+```bash
+docker run -d --name sparkrun-ui \
+  --restart unless-stopped \
+  -p 3000:3000 \
+  -v ~/.ssh:/home/app/.ssh:ro \
+  -v ~/.config/sparkrun:/home/app/.config/sparkrun \
+  -v ~/.cache/sparkrun:/home/app/.cache/sparkrun \
+  ghcr.io/mcampa/sparkrun-ui:latest
+```
+
+### docker compose
+
+A ready-made [`docker-compose.yml`](./docker-compose.yml) lives at the repo
+root with all the mounts pre-wired. Defaults assume the single-host case:
+
+```bash
+docker compose up -d
+```
+
+### What the volume mounts do
+
+| Mount | Purpose |
+| ----- | ------- |
+| `~/.ssh` (ro) | SSH private key + known_hosts so sparkrun can reach cluster hosts |
+| `~/.config/sparkrun` | Saved clusters, registries config |
+| `~/.cache/sparkrun` | Recipe registries, job manifests, benchmark results — shared with the host's `sparkrun` CLI so both see the same state |
+
+### Image tags
+
+- `latest` — every push to `main`
+- `sha-<short>` — every commit (immutable, pin this in production)
+- `vX.Y.Z` / `vX.Y` — release tags
+
+## Local development
+
+Without Docker, for hacking on the UI itself:
 
 ```bash
 pnpm install
@@ -70,7 +134,15 @@ pnpm dev          # binds 0.0.0.0:3000 so LAN clients can reach it
 
 Open <http://localhost:3000> (or the LAN IP from another machine).
 
-## Production
+### Requirements
+
+- Node.js 22+
+- pnpm 10+
+- `sparkrun` CLI on `PATH` (`SPARKRUN_BIN` env var to override)
+- A reachable cluster — either the default cluster
+  (`sparkrun cluster default`) or one resolvable via `--cluster` / `--hosts`
+
+### Production build (no Docker)
 
 ```bash
 pnpm build
