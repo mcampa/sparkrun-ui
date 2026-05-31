@@ -1,7 +1,8 @@
 import { os, eventIterator } from "@orpc/server";
 import { ORPCError } from "@orpc/server";
 import { z } from "zod";
-import { serverClient } from "@/lib/rpc/server";
+import { runSparkrunJson } from "@/lib/sparkrun";
+import { ClusterStatusSchema } from "@/lib/schemas";
 
 const ChatMessageSchema = z.object({
   role: z.enum(["system", "user", "assistant"]),
@@ -21,7 +22,9 @@ export const stream = os
     const { clusterId, messages, model } = input;
 
     // Resolve host:port from status
-    const status = await serverClient.status.get();
+    const status = ClusterStatusSchema.parse(
+      await runSparkrunJson(["cluster", "status", "--json"]),
+    );
     const workload = status.solo_entries.find((w) => w.cluster_id === clusterId);
     if (!workload) {
       throw new ORPCError("NOT_FOUND", {
