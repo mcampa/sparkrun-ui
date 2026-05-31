@@ -1,16 +1,13 @@
-import { os } from "@orpc/server";
-import { ClusterStatusSchema } from "@/lib/schemas";
-import { runSparkrunJson } from "@/lib/sparkrun";
-
-const getStatus = os
-  .output(ClusterStatusSchema)
-  .handler(async () =>
-    runSparkrunJson(["cluster", "status", "--json"]),
-  );
+import * as status from "./procedures/status";
+import * as workloads from "./procedures/workloads";
 
 export const router = {
   status: {
-    get: getStatus,
+    get: status.get,
+    stream: status.stream,
+  },
+  workloads: {
+    stop: workloads.stop,
   },
 };
 
