@@ -1,6 +1,7 @@
 ---
 name: issue-sweeper
 description: Continuously pull open issues, create branches, fix them, run checks, open PRs, and shepherd PRs through CI and review to merge — one issue at a time.
+user-invocable: true
 allowed-tools:
   - Bash
   - Read
