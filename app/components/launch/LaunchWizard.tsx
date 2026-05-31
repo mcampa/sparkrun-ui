@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Loader2, Play, RefreshCw } from "lucide-react";
 import { Button } from "@/app/components/ui/Button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/app/components/ui/Card";
+import { Badge } from "@/app/components/ui/Badge";
 import { Tabs } from "@/app/components/ui/Tabs";
 import { Select } from "@/app/components/ui/Select";
 import { CodeBlock } from "@/app/components/ui/CodeBlock";
@@ -220,9 +221,12 @@ export function LaunchWizard({
               placeholder="Search recipes…"
             />
             {selected && recipesByName[selected] && (
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                {recipesByName[selected].description || "No description"}
-              </p>
+              <div className="flex items-center gap-2">
+                <Badge tone="sky">{recipesByName[selected].runtime}</Badge>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  {recipesByName[selected].description || recipesByName[selected].model}
+                </p>
+              </div>
             )}
             <div className="flex justify-end pt-2">
               <Button
