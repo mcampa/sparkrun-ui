@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
+import { cn } from "@/lib/cn";
 import { EditorState, Compartment } from "@codemirror/state";
 import {
   EditorView,
@@ -52,11 +53,13 @@ export function YamlEditor({
   onChange,
   issues = [],
   readOnly = false,
+  className,
 }: {
   value: string;
   onChange?: (value: string) => void;
   issues?: ValidationIssue[];
   readOnly?: boolean;
+  className?: string;
 }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
@@ -130,7 +133,10 @@ export function YamlEditor({
   return (
     <div
       ref={hostRef}
-      className="h-[420px] overflow-hidden rounded-md border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950"
+      className={cn(
+        "h-[420px] overflow-hidden rounded-md border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950",
+        className,
+      )}
     />
   );
 }
