@@ -1,4 +1,4 @@
-import { mkdir, writeFile, unlink, readdir, stat } from "node:fs/promises";
+import { mkdir, writeFile, readFile, unlink, readdir, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -20,6 +20,22 @@ export async function writeDraft(draftId: string, yaml: string): Promise<string>
   const path = join(DRAFT_DIR, `${safeId(draftId)}.yaml`);
   await writeFile(path, yaml, "utf8");
   return path;
+}
+
+export async function writeDraftMeta(draftId: string, meta: Record<string, string>): Promise<void> {
+  await ensureDir();
+  const path = join(DRAFT_DIR, `${safeId(draftId)}.meta.json`);
+  await writeFile(path, JSON.stringify(meta), "utf8");
+}
+
+export async function readDraftMeta(draftId: string): Promise<Record<string, string> | null> {
+  try {
+    const path = join(DRAFT_DIR, `${safeId(draftId)}.meta.json`);
+    const raw = await readFile(path, "utf8");
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
 }
 
 export async function deleteDraft(draftId: string): Promise<void> {
