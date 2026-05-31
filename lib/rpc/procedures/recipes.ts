@@ -55,6 +55,37 @@ export const show = os
     return { text: r.stdout };
   });
 
+const numericFields = [
+  "model_weights_gb",
+  "kv_cache_total_gb",
+  "total_per_gpu_gb",
+  "max_model_len",
+  "tensor_parallel",
+  "model_params",
+  "num_layers",
+  "num_kv_heads",
+  "head_dim",
+  "gpu_memory_utilization",
+  "usable_gpu_memory_gb",
+  "available_kv_gb",
+  "max_context_tokens",
+  "context_multiplier",
+];
+
+function coerceNumbers(obj: unknown): unknown {
+  if (obj == null || typeof obj !== "object") return obj;
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
+    if (typeof v === "string" && numericFields.includes(k)) {
+      const n = Number(v);
+      out[k] = Number.isFinite(n) ? n : v;
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
+}
+
 const VramSchema = z.object({
   recipe: z.string(),
   model: z.string(),
@@ -78,6 +109,11 @@ const VramSchema = z.object({
   fits_dgx_spark: z.boolean().optional(),
   warnings: z.array(z.string()).default([]),
 });
+
+/** Parse sparkrun `recipe vram --json` output, coercing string-typed numbers. */
+export function parseRecipeVramJson(raw: unknown) {
+  return VramSchema.parse(coerceNumbers(raw));
+}
 
 export const info = os
   .input(z.object({ name: z.string().min(1), tp: z.number().int().min(1).optional() }))
@@ -113,7 +149,8 @@ export const info = os
       };
     }
     try {
-      const vram = VramSchema.parse(JSON.parse(r.stdout));
+      const raw = JSON.parse(r.stdout);
+      const vram = parseRecipeVramJson(raw);
       return { name: input.name, description, registry, vram, vramError: null };
     } catch {
       return {

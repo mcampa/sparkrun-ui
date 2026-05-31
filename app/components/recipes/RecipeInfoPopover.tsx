@@ -18,6 +18,7 @@ export function RecipeInfoPopover({ name, children }: { name: string; children: 
   const aliveRef = useRef(true);
 
   useEffect(() => {
+    aliveRef.current = true;
     return () => {
       aliveRef.current = false;
     };
