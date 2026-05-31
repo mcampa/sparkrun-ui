@@ -18,9 +18,10 @@ RUN pnpm build
 
 # -----------------------------------------------------------------------------
 # Runtime: Python 3.12 (to match the host's uv-installed sparkrun) + Node 22
-# + ssh client. Sparkrun itself is NOT installed in the image — it is bind-
-# mounted from the host so the container always uses the same version the
-# user already has.
+# + ssh client + git. Sparkrun itself is NOT installed in the image — it is
+# bind-mounted from the host so the container always uses the same version
+# the user already has. Git is needed by sparkrun to clone/pull recipe
+# registries.
 # -----------------------------------------------------------------------------
 FROM python:3.12-slim-bookworm AS runtime
 
@@ -29,6 +30,7 @@ RUN apt-get update \
        curl \
        ca-certificates \
        openssh-client \
+       git \
        gnupg \
        tini \
   && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
