@@ -4,6 +4,7 @@ import * as recipes from "./procedures/recipes";
 import * as clusters from "./procedures/clusters";
 import * as run from "./procedures/run";
 import * as benchmarks from "./procedures/benchmarks";
+import * as logs from "./procedures/logs";
 
 export const router = {
   status: {
@@ -32,6 +33,9 @@ export const router = {
     get: benchmarks.get,
     profiles: benchmarks.profiles,
     run: benchmarks.run,
+  },
+  logs: {
+    stream: logs.stream,
   },
 };
 
