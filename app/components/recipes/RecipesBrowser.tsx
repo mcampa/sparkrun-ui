@@ -11,7 +11,14 @@ import type { RecipeListItem } from "@/lib/schemas";
 import { RecipeInfoPopover } from "./RecipeInfoPopover";
 import { RecipeShowDialog } from "./RecipeShowDialog";
 
-export function RecipesBrowser({ recipes }: { recipes: RecipeListItem[] }) {
+export function RecipesBrowser({
+  recipes,
+  runningRecipes,
+}: {
+  recipes: RecipeListItem[];
+  runningRecipes: string[];
+}) {
+  const running = useMemo(() => new Set(runningRecipes), [runningRecipes]);
   const [registry, setRegistry] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [openRecipe, setOpenRecipe] = useState<string | null>(null);
@@ -112,7 +119,6 @@ export function RecipesBrowser({ recipes }: { recipes: RecipeListItem[] }) {
                     <tr>
                       <th className="px-4 py-2">Name</th>
                       <th className="px-4 py-2">Model</th>
-                      <th className="px-4 py-2">Runtime</th>
                       <th className="px-4 py-2">Nodes</th>
                       <th className="px-4 py-2"></th>
                     </tr>
@@ -121,25 +127,31 @@ export function RecipesBrowser({ recipes }: { recipes: RecipeListItem[] }) {
                     {rows.map((r) => (
                       <tr key={r.name} className="hover:bg-zinc-50 dark:hover:bg-zinc-950">
                         <td className="px-4 py-2 font-mono text-xs">
-                          <RecipeInfoPopover name={r.name}>
-                            <button
-                              type="button"
-                              onClick={() => setOpenRecipe(r.name)}
-                              className="cursor-pointer underline decoration-zinc-400 decoration-dotted underline-offset-2 hover:text-sky-600 dark:hover:text-sky-400"
-                            >
-                              {r.file}
-                            </button>
-                          </RecipeInfoPopover>
+                          <div className="flex items-center gap-2">
+                            <RecipeInfoPopover name={r.name}>
+                              <button
+                                type="button"
+                                onClick={() => setOpenRecipe(r.name)}
+                                className="cursor-pointer underline decoration-zinc-400 decoration-dotted underline-offset-2 hover:text-sky-600 dark:hover:text-sky-400"
+                              >
+                                {r.file}
+                              </button>
+                            </RecipeInfoPopover>
+                            {running.has(r.name) && <Badge tone="green">running</Badge>}
+                          </div>
                         </td>
                         <td className="px-4 py-2 font-mono text-xs text-zinc-600 dark:text-zinc-400">
-                          {r.model}
-                        </td>
-                        <td className="px-4 py-2">
+                          <div>{r.model}</div>
                           <Badge tone="sky">{r.runtime}</Badge>
                         </td>
                         <td className="px-4 py-2 text-xs text-zinc-600 dark:text-zinc-400">
-                          {r.min_nodes}
-                          {r.tp && r.tp !== "" && ` · tp=${r.tp}`}
+                          <span
+                            title="Minimum number of DGX Spark nodes required to run this recipe"
+                            className="cursor-help underline decoration-zinc-400 decoration-dotted underline-offset-2"
+                          >
+                            {r.min_nodes}
+                            {r.tp && r.tp !== "" && ` · tp=${r.tp}`}
+                          </span>
                         </td>
                         <td className="px-4 py-2 text-right">
                           <Link href={`/launch?recipe=${encodeURIComponent(r.name)}`}>
