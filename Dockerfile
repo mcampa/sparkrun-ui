@@ -7,41 +7,43 @@ FROM node:22-bookworm-slim AS builder
 
 WORKDIR /app
 
-# Enable corepack so pnpm matches the version pinned in package.json.
 RUN corepack enable
 
-# Copy manifest files first so `pnpm install` is cached when source changes.
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc* ./
 RUN pnpm install --frozen-lockfile
 
-# Copy the rest and build.
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm build
 
 # -----------------------------------------------------------------------------
-# Runtime: Node + Python + uv + sparkrun + ssh client.
-# Final layout uses Next's standalone output so we don't ship node_modules.
+# Runtime: Python 3.12 (to match the host's uv-installed sparkrun) + Node 22
+# + ssh client. Sparkrun itself is NOT installed in the image — it is bind-
+# mounted from the host so the container always uses the same version the
+# user already has.
 # -----------------------------------------------------------------------------
-FROM node:22-bookworm-slim AS runtime
+FROM python:3.12-slim-bookworm AS runtime
 
-# python3 / pip / venv for uv; openssh-client so sparkrun can ssh to hosts;
-# ca-certificates + curl for the uv installer.
 RUN apt-get update \
   && apt-get install --no-install-recommends -y \
-       python3 \
-       python3-venv \
-       openssh-client \
-       ca-certificates \
        curl \
+       ca-certificates \
+       openssh-client \
+       gnupg \
        tini \
+  && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+  && apt-get install --no-install-recommends -y nodejs \
+  && apt-get purge -y --auto-remove gnupg curl \
   && rm -rf /var/lib/apt/lists/*
 
-# Install uv (single static binary) into /usr/local/bin so it's on PATH for all
-# users. Pinning to the latest stable installer script.
-RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/bin sh
+# The host's sparkrun venv shim symlinks `python -> /usr/bin/python3` (system
+# Python). python:3.12-slim puts Python at /usr/local/bin/python3.12 so we
+# alias it at /usr/bin/python3* for the shim to resolve cleanly.
+RUN ln -sf /usr/local/bin/python3.12 /usr/bin/python3.12 \
+  && ln -sf /usr/local/bin/python3.12 /usr/bin/python3
 
-# Non-root user so the mounted ~/.ssh keys (typically uid 1000) line up.
+# Non-root user. uid 1000 matches the typical host login so bind-mounted
+# ~/.ssh and ~/.cache/sparkrun keep correct ownership semantics.
 ARG APP_UID=1000
 ARG APP_GID=1000
 RUN groupadd --system --gid ${APP_GID} app \
@@ -50,17 +52,13 @@ RUN groupadd --system --gid ${APP_GID} app \
 USER app
 WORKDIR /home/app/app
 ENV HOME=/home/app \
-    PATH=/home/app/.local/bin:/usr/local/bin:/usr/bin:/bin \
     NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     PORT=3000 \
-    HOSTNAME=0.0.0.0
+    HOSTNAME=0.0.0.0 \
+    SPARKRUN_BIN=sparkrun
 
-# Install sparkrun as the app user so its tool dir lives under /home/app.
-RUN uv tool install sparkrun
-
-# Copy the standalone Next.js server bundle, static assets and public dir.
-# `output: 'standalone'` puts a self-contained runner at .next/standalone.
+# Standalone Next.js server bundle + static + public.
 COPY --chown=app:app --from=builder /app/.next/standalone ./
 COPY --chown=app:app --from=builder /app/.next/static ./.next/static
 COPY --chown=app:app --from=builder /app/public ./public

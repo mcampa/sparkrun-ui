@@ -57,16 +57,24 @@ directly when richer state is needed.
 
 A multi-arch image (`linux/amd64` + `linux/arm64`) is published to
 [`ghcr.io/mcampa/sparkrun-ui`](https://github.com/mcampa/sparkrun-ui/pkgs/container/sparkrun-ui)
-on every push to `main`. The image bundles sparkrun (installed via `uv`) and
-the SSH client it needs.
+on every push to `main`.
+
+**The image does not bundle sparkrun.** Instead it bind-mounts the host's
+uv-installed sparkrun into the container so the UI always uses the same
+version you have on the host — no drift, no extra version to keep updated.
 
 ### Prerequisites
 
+- Sparkrun installed on the host: `uv tool install sparkrun`
+- Host Python is **3.12** (this is uv's default for sparkrun; the container
+  is built for Python 3.12 to match the venv's interpreter ABI). If you're on
+  a different Python version, see [Python version mismatch](#python-version-mismatch)
+  below.
 - An SSH key that can reach every host in your cluster (sparkrun ssh's to each
   host to run `docker ps`, `docker logs`, etc.)
-- A saved sparkrun cluster definition. From the host run `sparkrun cluster
-  create <name> --hosts <ip1>,<ip2>` once.
-- Docker installed on every cluster host (not on the UI host).
+- A saved sparkrun cluster definition. From the host:
+  `sparkrun cluster create <name> --hosts <ip1>,<ip2>` once.
+- Docker installed on every cluster host (not the UI host).
 
 ### Quick start — single DGX (cluster contains `127.0.0.1`)
 
@@ -74,16 +82,23 @@ the SSH client it needs.
 docker run -d --name sparkrun-ui \
   --restart unless-stopped \
   --network host \
-  -v ~/.ssh:/home/app/.ssh:ro \
-  -v ~/.config/sparkrun:/home/app/.config/sparkrun \
-  -v ~/.cache/sparkrun:/home/app/.cache/sparkrun \
+  -v $HOME/.local/bin/sparkrun:/usr/local/bin/sparkrun:ro \
+  -v $HOME/.local/share/uv/tools/sparkrun:$HOME/.local/share/uv/tools/sparkrun:ro \
+  -v $HOME/.ssh:/home/app/.ssh:ro \
+  -v $HOME/.config/sparkrun:/home/app/.config/sparkrun \
+  -v $HOME/.cache/sparkrun:/home/app/.cache/sparkrun \
   ghcr.io/mcampa/sparkrun-ui:latest
 ```
 
 Open <http://localhost:3000>.
 
-`--network host` is required when your cluster references `127.0.0.1` — the
-container's loopback otherwise points back at itself, not the host.
+Two things to notice:
+
+- `--network host` is required when your cluster references `127.0.0.1` — the
+  container's loopback otherwise points back at itself, not the host.
+- The sparkrun tool dir is mounted at the **same absolute path** inside the
+  container (`$HOME/.local/share/uv/tools/sparkrun` on both sides). The
+  shim's shebang hardcodes that path, so the venv resolves correctly.
 
 ### Quick start — multi-host / remote cluster
 
@@ -94,9 +109,11 @@ If your sparkrun cluster definition uses LAN IPs (e.g. `192.168.0.40,
 docker run -d --name sparkrun-ui \
   --restart unless-stopped \
   -p 3000:3000 \
-  -v ~/.ssh:/home/app/.ssh:ro \
-  -v ~/.config/sparkrun:/home/app/.config/sparkrun \
-  -v ~/.cache/sparkrun:/home/app/.cache/sparkrun \
+  -v $HOME/.local/bin/sparkrun:/usr/local/bin/sparkrun:ro \
+  -v $HOME/.local/share/uv/tools/sparkrun:$HOME/.local/share/uv/tools/sparkrun:ro \
+  -v $HOME/.ssh:/home/app/.ssh:ro \
+  -v $HOME/.config/sparkrun:/home/app/.config/sparkrun \
+  -v $HOME/.cache/sparkrun:/home/app/.cache/sparkrun \
   ghcr.io/mcampa/sparkrun-ui:latest
 ```
 
@@ -113,9 +130,22 @@ docker compose up -d
 
 | Mount | Purpose |
 | ----- | ------- |
+| `~/.local/bin/sparkrun` (ro) | Host's sparkrun launcher script |
+| `~/.local/share/uv/tools/sparkrun` (ro, same path) | Host's sparkrun venv (Python + site-packages) |
 | `~/.ssh` (ro) | SSH private key + known_hosts so sparkrun can reach cluster hosts |
 | `~/.config/sparkrun` | Saved clusters, registries config |
 | `~/.cache/sparkrun` | Recipe registries, job manifests, benchmark results — shared with the host's `sparkrun` CLI so both see the same state |
+
+### Python version mismatch
+
+If `python3 --version` on the host is not 3.12, the bind-mounted venv won't
+work in the container (the C-extension wheels in `site-packages` were built
+against the host's Python ABI). Two options:
+
+1. Reinstall sparkrun on the host pinning Python 3.12:
+   `uv tool install --python 3.12 --force sparkrun`
+2. Build the image yourself targeting your Python version: edit `Dockerfile`
+   and change `FROM python:3.12-slim-bookworm` and the symlink target.
 
 ### Image tags
 

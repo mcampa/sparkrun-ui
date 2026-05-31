@@ -1,5 +1,11 @@
 # Convenience compose file. `docker compose up -d` and you're done.
 #
+# This image does NOT bundle sparkrun. Instead it bind-mounts the host's
+# uv-installed sparkrun into the container so the UI always uses whatever
+# version you have on the host. Required prereq:
+#
+#   uv tool install sparkrun           # on the host, if you haven't already
+#
 # Defaults assume a single-host setup where the UI runs on the same machine
 # as the DGX Spark and talks to a 127.0.0.1 cluster. For a multi-host setup
 # point your sparkrun cluster definitions at the LAN IPs and switch to a
@@ -22,7 +28,17 @@ services:
       - PORT=3000
 
     volumes:
-      # SSH keys that sparkrun uses to reach cluster hosts. Read-only mount.
+      # --- bind-mounted sparkrun from the host ---
+      # The shim (a Python script). Lands on PATH in the container.
+      - ${HOME}/.local/bin/sparkrun:/usr/local/bin/sparkrun:ro
+      # The uv-managed venv with sparkrun's site-packages. The shim's shebang
+      # hardcodes this absolute path, so we mount it at the SAME path inside
+      # the container (note `${HOME}` on both sides — docker-compose
+      # interpolates from the host environment).
+      - ${HOME}/.local/share/uv/tools/sparkrun:${HOME}/.local/share/uv/tools/sparkrun:ro
+
+      # --- sparkrun state, shared with the host CLI ---
+      # SSH keys that sparkrun uses to reach cluster hosts. Read-only.
       - ${HOME}/.ssh:/home/app/.ssh:ro
       # sparkrun config (saved clusters, registries) lives here.
       - ${HOME}/.config/sparkrun:/home/app/.config/sparkrun
