@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, BookText, Gauge, LineChart, Rocket } from "lucide-react";
+import { Activity, BookText, Gauge, LineChart, MessageSquare, Rocket } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const items = [
@@ -10,6 +10,7 @@ const items = [
   { href: "/launch", label: "Launch", icon: Rocket },
   { href: "/benchmarks", label: "Benchmarks", icon: Gauge },
   { href: "/monitor", label: "Monitor", icon: LineChart },
+  { href: "/chat", label: "Chat", icon: MessageSquare },
 ];
 
 export function Nav() {

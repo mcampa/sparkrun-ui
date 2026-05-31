@@ -1,7 +1,16 @@
 ---
 name: issue-sweeper
 description: Continuously pull open issues, create branches, fix them, run checks, open PRs, and shepherd PRs through CI and review to merge — one issue at a time.
-allowed-tools: Bash, Read, Write, Edit, Agent, TaskCreate, TaskUpdate, AskUserQuestion, WebFetch
+allowed-tools:
+  - Bash
+  - Read
+  - Write
+  - Edit
+  - Agent
+  - TaskCreate
+  - TaskUpdate
+  - AskUserQuestion
+  - WebFetch
 ---
 
 # Issue Sweeper
