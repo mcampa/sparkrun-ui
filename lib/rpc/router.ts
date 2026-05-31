@@ -3,6 +3,7 @@ import * as workloads from "./procedures/workloads";
 import * as recipes from "./procedures/recipes";
 import * as clusters from "./procedures/clusters";
 import * as run from "./procedures/run";
+import * as benchmarks from "./procedures/benchmarks";
 
 export const router = {
   status: {
@@ -25,6 +26,12 @@ export const router = {
   },
   run: {
     start: run.start,
+  },
+  benchmarks: {
+    list: benchmarks.list,
+    get: benchmarks.get,
+    profiles: benchmarks.profiles,
+    run: benchmarks.run,
   },
 };
 
