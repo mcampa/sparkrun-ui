@@ -46,8 +46,10 @@ export function YamlEditor({
   const linterCompartment = useRef(new Compartment());
   const readOnlyCompartment = useRef(new Compartment());
 
-  issuesRef.current = issues;
-  onChangeRef.current = onChange;
+  useEffect(() => {
+    issuesRef.current = issues;
+    onChangeRef.current = onChange;
+  });
 
   useEffect(() => {
     if (!hostRef.current) return;

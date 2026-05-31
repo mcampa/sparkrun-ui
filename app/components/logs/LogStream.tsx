@@ -15,6 +15,8 @@ export function LogStream({ clusterId, tail = 200 }: { clusterId: string; tail?:
   useEffect(() => {
     const ac = new AbortController();
     let cancelled = false;
+    // Reset between subscriptions when clusterId/tail change.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLines([]);
     setConnected(false);
     (async () => {

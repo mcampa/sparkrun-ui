@@ -91,11 +91,15 @@ export function LaunchWizard({
     [],
   );
 
+  // One-shot: if the page was opened with ?recipe=… (initialRecipe),
+  // fetch the YAML on mount.
   useEffect(() => {
-    if (selected && !yamlText && step === "edit") {
-      loadRecipe(selected);
+    if (initialRecipe) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      loadRecipe(initialRecipe);
     }
-  }, [selected, yamlText, step, loadRecipe]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const validateTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const runValidation = useCallback(async () => {

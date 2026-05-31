@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardBody } from "@/app/components/ui/Card";
 import { Badge } from "@/app/components/ui/Badge";
 import { rpc } from "@/lib/rpc/client";
@@ -17,8 +17,8 @@ function num(s: string | undefined): number {
 
 export function MonitorLive() {
   const [tick, setTick] = useState<Tick | null>(null);
+  const [history, setHistory] = useState<Record<string, HostHistory>>({});
   const [connected, setConnected] = useState(false);
-  const history = useRef<Record<string, HostHistory>>({});
 
   useEffect(() => {
     const ac = new AbortController();
@@ -30,14 +30,19 @@ export function MonitorLive() {
         for await (const next of iter) {
           if (cancelled) break;
           setTick(next as Tick);
-          for (const [host, m] of Object.entries(next.hosts)) {
-            const h = history.current[host] ?? { cpu: [], gpu: [], mem: [], power: [] };
-            h.cpu = push(h.cpu, num((m as HostMetrics).cpu_usage_pct));
-            h.gpu = push(h.gpu, num((m as HostMetrics).gpu_util_pct));
-            h.mem = push(h.mem, num((m as HostMetrics).mem_used_pct));
-            h.power = push(h.power, num((m as HostMetrics).gpu_power_w));
-            history.current[host] = h;
-          }
+          setHistory((prev) => {
+            const updated = { ...prev };
+            for (const [host, m] of Object.entries(next.hosts)) {
+              const h = updated[host] ?? { cpu: [], gpu: [], mem: [], power: [] };
+              updated[host] = {
+                cpu: push(h.cpu, num((m as HostMetrics).cpu_usage_pct)),
+                gpu: push(h.gpu, num((m as HostMetrics).gpu_util_pct)),
+                mem: push(h.mem, num((m as HostMetrics).mem_used_pct)),
+                power: push(h.power, num((m as HostMetrics).gpu_power_w)),
+              };
+            }
+            return updated;
+          });
         }
       } catch (err) {
         if (!cancelled && !(err instanceof DOMException && err.name === "AbortError")) {
@@ -78,7 +83,7 @@ export function MonitorLive() {
               key={host}
               host={host}
               metrics={metrics}
-              history={history.current[host] ?? { cpu: [], gpu: [], mem: [], power: [] }}
+              history={history[host] ?? { cpu: [], gpu: [], mem: [], power: [] }}
             />
           ))}
         </div>

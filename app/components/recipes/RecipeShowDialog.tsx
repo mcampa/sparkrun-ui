@@ -26,6 +26,7 @@ export function RecipeShowDialog({
     if (!open) return;
     const cached = cache.get(name);
     if (cached) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setText(cached);
       return;
     }

@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Nightly compat check at 06:17 UTC catches upstream sparkrun breakage
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit:
+    name: Lint, typecheck, unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+  compat:
+    name: sparkrun upstream compatibility
+    # Run on push to main, on schedule, on manual dispatch.
+    # Skip on regular PRs to keep PR feedback fast.
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Install latest sparkrun
+        run: |
+          $HOME/.local/bin/uv tool install sparkrun
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Record sparkrun version
+        run: sparkrun --version
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Live compatibility tests
+        env:
+          SPARKRUN_BIN: sparkrun
+        run: pnpm test:compat
