@@ -19,7 +19,7 @@ gh issue list --state open --json number,title --limit 20
 gh pr list --json number,state,headRefName,title
 ```
 
-From the open issues, identify the **lowest-numbered** issue that does **not** already have an open PR. If every open issue already has an open PR, pick the lowest-numbered issue that has an open PR and move to **Step 3 (shepherd)**.
+From the open issues, identify the **lowest-numbered** issue that does **not** already have an open PR. If every open issue already has an open PR, pick the lowest-numbered issue that has an open PR and move to **Step 3 (shepherd)**. If the lowest open issue's PR is ready to merge (CI green, no unresolved reviews), stop and report — do NOT merge without explicit approval.
 
 If there are no open issues at all, report "No open issues." and stop this iteration.
 
@@ -109,16 +109,15 @@ For each unresolved review comment:
 - If the comment is unclear: ask the reviewer for clarification via a reply.
 - If the comment is a question: answer it and resolve.
 
-#### 3c — Check PR mergeability
+#### 3c — Report PR readiness (NEVER merge)
 
 If CI is green, review comments are resolved, and the PR is mergeable:
-- The PR is ready. Report "PR #<N> is ready to merge."
-- Do NOT merge it yourself — the user merges PRs.
+- Report "PR #<N> is ready to merge. Awaiting your approval."
+- **STOP here.** Do NOT merge. Do NOT proceed to the next issue.
+- Only merge if the user explicitly says "merge it" or similar.
 
 If the PR was merged (state === "MERGED"):
-- Report "PR #<N> merged. Moving to next issue."
-- The issue should auto-close via the "Closes #<N>" in the PR body.
-- On the next iteration, pick the next open issue.
+- Report "PR #<N> merged." and proceed to the next open issue on the next cycle.
 
 #### 3d — Stale PR
 
@@ -136,5 +135,5 @@ After completing one full cycle (either fixing a new issue or shepherding an exi
 - **Minimal diffs.** Only change what's needed to fix the issue. No refactoring, no drive-by cleanups.
 - **Commit hygiene.** Use descriptive commit messages. Reference the issue number.
 - **Branch naming.** Always `fix/issue-<N>` from `origin/main`.
-- **Don't merge PRs yourself.** Report readiness, let the user merge.
+- **NEVER merge PRs yourself.** When CI is green and reviews resolved, report "PR #N ready for merge" and STOP. The user must explicitly approve every merge. Do not merge even if the user seems to want forward progress — always wait for explicit approval.
 - **On errors.** If a command fails, diagnose and fix — don't skip it.
