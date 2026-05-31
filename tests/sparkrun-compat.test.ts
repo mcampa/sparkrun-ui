@@ -55,10 +55,13 @@ describeLive("sparkrun CLI compatibility", () => {
   });
 
   it("cluster status --json parses as ClusterStatusSchema", () => {
-    const r = run(["cluster", "status", "--json"]);
+    // CI runners don't have a default cluster — pass --hosts explicitly.
+    // The CLI returns a valid (empty) status even if no docker is running.
+    const r = run(["cluster", "status", "--json", "--hosts", "127.0.0.1"]);
     expect(r.code, r.stderr).toBe(0);
     const parsed = ClusterStatusSchema.parse(JSON.parse(r.stdout));
     expect(typeof parsed.host_count).toBe("number");
+    expect(Array.isArray(parsed.solo_entries)).toBe(true);
   });
 
   it("cluster list --json parses", () => {
