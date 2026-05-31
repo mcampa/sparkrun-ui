@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { Rocket, Search } from "lucide-react";
 import { Card, CardBody } from "@/app/components/ui/Card";
@@ -19,8 +19,26 @@ export function RecipesBrowser({
   runningRecipes: string[];
 }) {
   const running = useMemo(() => new Set(runningRecipes), [runningRecipes]);
-  const [registry, setRegistry] = useState<string>("all");
-  const [search, setSearch] = useState("");
+  const [registry, setRegistry] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("recipes-registry") ?? "all";
+    }
+    return "all";
+  });
+  const [search, setSearch] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("recipes-search") ?? "";
+    }
+    return "";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("recipes-registry", registry);
+  }, [registry]);
+
+  useEffect(() => {
+    localStorage.setItem("recipes-search", search);
+  }, [search]);
   const [openRecipe, setOpenRecipe] = useState<string | null>(null);
 
   const registries = useMemo(() => {
