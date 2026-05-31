@@ -199,7 +199,7 @@ export function LaunchWizard({
         </Card>
       )}
 
-      {(step === "edit" || step === "preview" || step === "confirm") && yamlText && (
+      {step === "edit" && yamlText && (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
@@ -223,39 +223,12 @@ export function LaunchWizard({
                 <Tabs.List>
                   <Tabs.Tab value="form">Overrides</Tabs.Tab>
                   <Tabs.Tab value="yaml">YAML</Tabs.Tab>
-                  <Tabs.Tab value="preview">
-                    Preview {preview && (preview.ok ? "✓" : "✗")}
-                  </Tabs.Tab>
                 </Tabs.List>
                 <Tabs.Panel value="form">
                   <OverridesForm yaml={yamlText} onYamlChange={setYamlText} />
                 </Tabs.Panel>
                 <Tabs.Panel value="yaml">
                   <YamlEditor value={yamlText} onChange={setYamlText} issues={issues} />
-                </Tabs.Panel>
-                <Tabs.Panel value="preview">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                      Runs <span className="font-mono">sparkrun run --dry-run</span> with the current YAML.
-                    </p>
-                    <Button size="sm" onClick={generatePreview} disabled={previewing}>
-                      {previewing ? (
-                        <Loader2 size={14} className="animate-spin" />
-                      ) : (
-                        <RefreshCw size={14} />
-                      )}
-                      {previewing ? "Generating…" : preview ? "Regenerate" : "Generate"}
-                    </Button>
-                  </div>
-                  <div className="mt-3">
-                    {preview ? (
-                      <CodeBlock>{preview.stdout || preview.stderr || "(no output)"}</CodeBlock>
-                    ) : (
-                      <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                        No preview yet.
-                      </p>
-                    )}
-                  </div>
                 </Tabs.Panel>
               </Tabs>
             </CardBody>
@@ -273,6 +246,39 @@ export function LaunchWizard({
             </Card>
           </div>
         </div>
+      )}
+
+      {(step === "preview" || step === "confirm") && yamlText && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="font-mono text-sm">{selected}</CardTitle>
+              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                {recipesByName[selected ?? ""]?.model} · cluster <span className="font-mono">{cluster || "default"}</span>
+              </p>
+            </div>
+            <Button size="sm" onClick={generatePreview} disabled={previewing}>
+              {previewing ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <RefreshCw size={14} />
+              )}
+              {previewing ? "Generating…" : "Regenerate"}
+            </Button>
+          </CardHeader>
+          <CardBody>
+            <p className="mb-2 text-xs text-zinc-500 dark:text-zinc-400">
+              Output of <span className="font-mono">sparkrun run --dry-run</span>
+            </p>
+            {preview ? (
+              <CodeBlock>{preview.stdout || preview.stderr || "(no output)"}</CodeBlock>
+            ) : (
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                {previewing ? "Generating…" : "No preview yet."}
+              </p>
+            )}
+          </CardBody>
+        </Card>
       )}
 
       {step !== "select" && (
@@ -294,7 +300,6 @@ export function LaunchWizard({
                 disabled={!canAdvanceFromEdit}
                 onClick={() => {
                   setStep("preview");
-                  setEditorTab("preview");
                   if (!preview) generatePreview();
                 }}
               >
