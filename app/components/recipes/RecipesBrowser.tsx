@@ -182,8 +182,12 @@ export function RecipesBrowser({
                           </div>
                         </td>
                         <td className="px-4 py-2 font-mono text-xs text-zinc-600 dark:text-zinc-400">
-                          <div>{r.model}</div>
-                          <Badge tone="sky">{r.runtime}</Badge>
+                          <div className="flex flex-col gap-1">
+                            <span>{r.model}</span>
+                            <span>
+                              <Badge tone="sky">{r.runtime}</Badge>
+                            </span>
+                          </div>
                         </td>
                         <td className="px-4 py-2 text-xs text-zinc-600 dark:text-zinc-400">
                           <span
