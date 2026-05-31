@@ -44,17 +44,22 @@ describe("runningRecipes", () => {
   });
 
   it("resolveRunningRecipeNameByPath matches registry recipe paths", () => {
-    expect(resolveRunningRecipeNameByPath(sampleRecipe.path, [sampleRecipe])).toBe(sampleRecipe.name);
+    expect(resolveRunningRecipeNameByPath(sampleRecipe.path, [sampleRecipe])).toBe(
+      sampleRecipe.name,
+    );
   });
 
   it("resolveRunningRecipeNameByFile matches recipe file slugs", () => {
-    expect(resolveRunningRecipeNameByFile(sampleRecipe.file, [sampleRecipe])).toBe(sampleRecipe.name);
+    expect(resolveRunningRecipeNameByFile(sampleRecipe.file, [sampleRecipe])).toBe(
+      sampleRecipe.name,
+    );
   });
 
   it("resolveRunningRecipeName prefers draft meta over raw file fallback", async () => {
     const workload: Workload = {
       cluster_id: "sparkrun_test",
       meta: {
+        overrides: {},
         recipe: "/tmp/sparkrun-ui-drafts/draft123.yaml",
         recipe_state: { _raw: { name: sampleRecipe.file } },
       },
@@ -71,6 +76,7 @@ describe("runningRecipes", () => {
     const workload: Workload = {
       cluster_id: "sparkrun_test",
       meta: {
+        overrides: {},
         recipe: "/tmp/sparkrun-ui-drafts/draft123.yaml",
         recipe_state: { _raw: { name: sampleRecipe.file } },
       },
@@ -91,7 +97,7 @@ describe("runningRecipes", () => {
   });
 
   it("collectRunningRecipeNames skips workloads without recipe paths", async () => {
-    const workload: Workload = { cluster_id: "sparkrun_test", meta: {} };
+    const workload: Workload = { cluster_id: "sparkrun_test", meta: { overrides: {} } };
     await expect(collectRunningRecipeNames([workload], [sampleRecipe])).resolves.toEqual([]);
   });
 });
