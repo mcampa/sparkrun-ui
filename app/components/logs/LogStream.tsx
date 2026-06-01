@@ -1,10 +1,43 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ScrollText } from "lucide-react";
 import { rpc } from "@/lib/rpc/client";
 import { Switch } from "@/app/components/ui/Switch";
+import { parseAnsi, type AnsiColor, type AnsiSegment } from "@/lib/ansi";
 
 type Line = { line: string; ts: string; stream?: "out" | "err" | "meta" };
+
+// ANSI fg colors mapped to Tailwind utilities tuned for the black terminal
+// background. Bright variants are slightly lighter than their standard
+// counterparts; "black" maps to a mid gray so dim text doesn't disappear.
+const FG: Record<AnsiColor, string> = {
+  "0": "text-zinc-600",
+  "1": "text-red-400",
+  "2": "text-emerald-400",
+  "3": "text-yellow-300",
+  "4": "text-blue-400",
+  "5": "text-fuchsia-400",
+  "6": "text-cyan-300",
+  "7": "text-zinc-100",
+  b0: "text-zinc-500",
+  b1: "text-red-300",
+  b2: "text-emerald-300",
+  b3: "text-yellow-200",
+  b4: "text-blue-300",
+  b5: "text-fuchsia-300",
+  b6: "text-cyan-200",
+  b7: "text-white",
+};
+
+function classesFor(seg: AnsiSegment): string {
+  const out: string[] = [];
+  if (seg.bold) out.push("font-bold");
+  if (seg.dim) out.push("opacity-60");
+  if (seg.italic) out.push("italic");
+  if (seg.underline) out.push("underline");
+  if (seg.fg) out.push(FG[seg.fg]);
+  return out.join(" ");
+}
 
 export function LogStream({ clusterId, tail = 200 }: { clusterId: string; tail?: number }) {
   const [lines, setLines] = useState<Line[]>([]);
@@ -76,23 +109,29 @@ export function LogStream({ clusterId, tail = 200 }: { clusterId: string; tail?:
         {lines.length === 0 ? (
           <p className="text-zinc-500">Waiting for log output…</p>
         ) : (
-          lines.map((l, i) => (
-            <div
-              key={i}
-              className={
-                "whitespace-pre-wrap " +
-                (l.stream === "meta"
-                  ? "text-zinc-500 italic"
-                  : l.stream === "err"
-                    ? "text-red-300"
-                    : "")
-              }
-            >
-              {l.line}
-            </div>
-          ))
+          lines.map((l, i) => <LogLine key={i} line={l} />)
         )}
       </div>
+    </div>
+  );
+}
+
+function LogLine({ line }: { line: Line }) {
+  const segments = useMemo(() => parseAnsi(line.line), [line.line]);
+  const lineTone =
+    line.stream === "meta" ? "text-zinc-500 italic" : line.stream === "err" ? "text-red-300" : "";
+  return (
+    <div className={`whitespace-pre-wrap ${lineTone}`}>
+      {segments.map((seg, i) => {
+        const cls = classesFor(seg);
+        return cls ? (
+          <span key={i} className={cls}>
+            {seg.text}
+          </span>
+        ) : (
+          <span key={i}>{seg.text}</span>
+        );
+      })}
     </div>
   );
 }
