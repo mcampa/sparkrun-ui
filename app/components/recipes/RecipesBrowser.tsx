@@ -11,6 +11,7 @@ import { Input } from "@/app/components/ui/Field";
 import type { RecipeListItem } from "@/lib/schemas";
 import { RecipeInfoPopover } from "./RecipeInfoPopover";
 import { RecipeShowDialog } from "./RecipeShowDialog";
+import { UpdateSparkrunButton } from "@/app/components/dashboard/UpdateSparkrunButton";
 
 export function RecipesBrowser({
   recipes,
@@ -104,11 +105,14 @@ export function RecipesBrowser({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-3">
-        <div className="flex items-baseline gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight">Recipes</h1>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            {filtered.length} of {recipes.length}
-          </p>
+        <div className="flex items-baseline justify-between">
+          <div className="flex items-baseline gap-3">
+            <h1 className="text-2xl font-semibold tracking-tight">Recipes</h1>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+              {filtered.length} of {recipes.length}
+            </p>
+          </div>
+          <UpdateSparkrunButton />
         </div>
         <div className="flex flex-wrap items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50 p-2 dark:border-zinc-800 dark:bg-zinc-900/40">
           <div className="relative min-w-[12rem] flex-1">
