@@ -30,10 +30,10 @@ Without Docker, for hacking on the UI itself:
 
 ```bash
 pnpm install
-pnpm dev          # binds 0.0.0.0:3000 so LAN clients can reach it
+pnpm dev          # binds 0.0.0.0:5678 so LAN clients can reach it
 ```
 
-Open <http://localhost:3000> (or the LAN IP from another machine).
+Open <http://localhost:5678> (or the LAN IP from another machine).
 
 ### Requirements
 
