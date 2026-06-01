@@ -3,6 +3,16 @@
 :root {
   --background: #fafafa;
   --foreground: #18181b;
+
+  /* CodeMirror YAML syntax colors (light mode). Picked for AA contrast
+     on the editor's white background and Tailwind palette consistency. */
+  --cm-property: #0369a1; /* sky-700 — keys */
+  --cm-string: #15803d; /* green-700 — quoted/unquoted strings */
+  --cm-atom: #9333ea; /* purple-600 — numbers, bool, null */
+  --cm-comment: #71717a; /* zinc-500 */
+  --cm-keyword: #b45309; /* amber-700 */
+  --cm-meta: #71717a; /* zinc-500 — anchors/tags */
+  --cm-punct: #52525b; /* zinc-600 */
 }
 
 @theme inline {
@@ -16,6 +26,14 @@
   :root {
     --background: #09090b;
     --foreground: #fafafa;
+
+    --cm-property: #7dd3fc; /* sky-300 */
+    --cm-string: #86efac; /* green-300 */
+    --cm-atom: #d8b4fe; /* purple-300 */
+    --cm-comment: #a1a1aa; /* zinc-400 */
+    --cm-keyword: #fcd34d; /* amber-300 */
+    --cm-meta: #a1a1aa;
+    --cm-punct: #d4d4d8; /* zinc-300 */
   }
 }
 
