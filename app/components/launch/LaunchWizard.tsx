@@ -233,6 +233,7 @@ export function LaunchWizard({
               }}
               options={recipeOptions}
               placeholder="Search recipes…"
+              searchable
             />
             {selected && recipesByName[selected] && (
               <div className="flex items-center gap-2">
