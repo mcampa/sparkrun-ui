@@ -63,9 +63,15 @@ export function ChatPage({ initial }: { initial: ClusterStatus }) {
     };
   }, []);
 
+  // Auto-scroll the window when new content arrives, but only if the user is
+  // already near the bottom — otherwise reading older messages while a long
+  // response streams in would yank them back down. Standard ChatGPT pattern.
   useEffect(() => {
-    if (hasConversation) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (!hasConversation) return;
+    const distanceFromBottom =
+      document.documentElement.scrollHeight - window.scrollY - window.innerHeight;
+    if (distanceFromBottom < 120) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     }
   }, [messages, hasConversation]);
 
@@ -253,7 +259,7 @@ export function ChatPage({ initial }: { initial: ClusterStatus }) {
   }
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-9rem)] w-full max-w-3xl flex-col">
+    <div className="mx-auto w-full max-w-3xl">
       <div className="flex items-center justify-between gap-2 pb-3">
         <div className="min-w-0 flex-1">
           <Select
@@ -270,20 +276,22 @@ export function ChatPage({ initial }: { initial: ClusterStatus }) {
         </Button>
       </div>
 
-      <div className="-mx-2 flex-1 overflow-y-auto px-2">
-        <div className="flex flex-col gap-6 py-4">
-          {messages.map((msg, i) => (
-            <MessageRow
-              key={i}
-              message={msg}
-              isStreamingTail={isStreaming && i === messages.length - 1 && !msg.content}
-            />
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
+      <div className="flex flex-col gap-6 pb-4">
+        {messages.map((msg, i) => (
+          <MessageRow
+            key={i}
+            message={msg}
+            isStreamingTail={isStreaming && i === messages.length - 1 && !msg.content}
+          />
+        ))}
+        {/* Anchor for auto-scroll. scroll-mb leaves room above the sticky
+            composer so the last message stays fully visible. */}
+        <div ref={messagesEndRef} className="scroll-mb-40" />
       </div>
 
-      <div className="pt-3 pb-2">{composer}</div>
+      <div className="sticky bottom-0 -mx-2 bg-gradient-to-t from-zinc-50 via-zinc-50/95 to-transparent px-2 pt-6 pb-2 dark:from-zinc-950 dark:via-zinc-950/95">
+        {composer}
+      </div>
     </div>
   );
 }
