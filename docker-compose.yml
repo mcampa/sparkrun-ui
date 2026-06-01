@@ -14,6 +14,9 @@
 services:
   sparkrun-ui:
     image: ghcr.io/mcampa/sparkrun-ui:latest
+    # `:latest` is mutable — always re-check the registry so `docker compose up`
+    # picks up new builds instead of reusing a stale local cache.
+    pull_policy: always
     container_name: sparkrun-ui
     restart: unless-stopped
 
