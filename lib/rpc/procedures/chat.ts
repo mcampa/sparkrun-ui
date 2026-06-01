@@ -107,7 +107,10 @@ export const stream = os
     }
   });
 
-async function fetchServedModel(baseUrl: string, signal?: AbortSignal): Promise<string | null> {
+export async function fetchServedModel(
+  baseUrl: string,
+  signal?: AbortSignal,
+): Promise<string | null> {
   try {
     const res = await fetch(`${baseUrl}/v1/models`, { signal });
     if (!res.ok) return null;
