@@ -1,8 +1,42 @@
 {
   "name": "sparkrun-ui",
-  "version": "0.1.0",
-  "private": true,
+  "version": "0.1.1",
+  "description": "Web UI for sparkrun — launch and monitor inference workloads on NVIDIA DGX Spark clusters.",
   "license": "Apache-2.0",
+  "homepage": "https://github.com/mcampa/sparkrun-ui",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mcampa/sparkrun-ui.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mcampa/sparkrun-ui/issues"
+  },
+  "keywords": [
+    "sparkrun",
+    "dgx-spark",
+    "nvidia",
+    "llm",
+    "inference",
+    "vllm",
+    "ui",
+    "nextjs"
+  ],
+  "bin": {
+    "sparkrun-ui": "bin/sparkrun-ui.mjs"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
     "dev": "next dev -H 0.0.0.0",
     "build": "next build",
@@ -13,7 +47,9 @@
     "test:watch": "vitest",
     "test:compat": "vitest run tests/sparkrun-compat.test.ts",
     "format": "prettier --write .",
-    "format:ci": "prettier --check ."
+    "format:ci": "prettier --check .",
+    "pack:standalone": "node scripts/pack-standalone.mjs",
+    "prepack": "next build && node scripts/pack-standalone.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",

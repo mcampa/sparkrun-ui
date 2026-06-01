@@ -53,6 +53,27 @@ The backend is the `sparkrun` CLI itself, shelled out via
 `child_process.spawn`. The UI also reads `~/.cache/sparkrun/{jobs,benchmarks}`
 directly when richer state is needed.
 
+## Run with npx
+
+The fastest way to try it. Requires Node 20+ and `sparkrun` already on `$PATH`:
+
+```bash
+npx sparkrun-ui
+# → http://0.0.0.0:3000 (reachable on the LAN; use --host 127.0.0.1 for loopback only)
+```
+
+Common flags:
+
+```bash
+npx sparkrun-ui --port 4000           # change the port
+npx sparkrun-ui --host 127.0.0.1      # bind loopback only (not exposed on the network)
+npx sparkrun-ui --sparkrun-bin /opt/sparkrun/bin/sparkrun
+```
+
+`--help` lists the full set. Behind the scenes this runs the same Next.js
+standalone server that the Docker image uses; the package ships a precompiled
+bundle so there is no build step on the user's machine.
+
 ## Run with Docker (recommended)
 
 A multi-arch image (`linux/amd64` + `linux/arm64`) is published to
