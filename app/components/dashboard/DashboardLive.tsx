@@ -1,9 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Rocket } from "lucide-react";
 import { rpc } from "@/lib/rpc/client";
 import type { ClusterStatus } from "@/lib/schemas";
 import { Card, CardBody } from "@/app/components/ui/Card";
 import { Badge } from "@/app/components/ui/Badge";
+import { Button } from "@/app/components/ui/Button";
 import { WorkloadCard } from "./WorkloadCard";
 import { AggregateStats } from "./AggregateStats";
 
@@ -62,8 +65,24 @@ export function DashboardLive({
         <h2 className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Workloads</h2>
         {status.solo_entries.length === 0 ? (
           <Card>
-            <CardBody className="text-sm text-zinc-500 dark:text-zinc-400">
-              No workloads are currently running.
+            <CardBody className="flex flex-col items-center gap-4 py-12 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-sky-50 text-sky-600 dark:bg-sky-950 dark:text-sky-400">
+                <Rocket size={22} />
+              </div>
+              <div className="flex flex-col gap-1">
+                <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+                  No workloads running
+                </h3>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                  Launch a recipe to start an inference workload on your cluster.
+                </p>
+              </div>
+              <Link href="/launch">
+                <Button variant="primary">
+                  <Rocket size={14} />
+                  Launch a recipe
+                </Button>
+              </Link>
             </CardBody>
           </Card>
         ) : (
