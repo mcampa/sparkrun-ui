@@ -25,8 +25,8 @@ export function ChatPage({ initial }: { initial: ClusterStatus }) {
         .filter((w) => w.host && w.meta.port)
         .map((w) => ({
           value: w.cluster_id,
-          label: w.meta.recipe ?? w.cluster_id,
-          description: w.meta.model ?? `${w.host}:${w.meta.port}`,
+          label: w.meta.model ?? w.cluster_id,
+          description: w.cluster_id,
         })),
     [status.solo_entries],
   );
