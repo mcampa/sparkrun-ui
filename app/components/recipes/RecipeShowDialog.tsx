@@ -12,12 +12,15 @@ const cache = new Map<string, string>();
 
 export function RecipeShowDialog({
   name,
+  title,
   open,
   onOpenChange,
   running = false,
   showLaunch = true,
 }: {
   name: string;
+  /** Optional display title (defaults to `name`). Useful when `name` is a file path. */
+  title?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   running?: boolean;
@@ -59,7 +62,7 @@ export function RecipeShowDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content title={name} size="xl" description="sparkrun recipe show">
+      <Dialog.Content title={title ?? name} size="xl" description="sparkrun recipe show">
         <Dialog.Body>
           {loading && !text ? (
             <div className="flex items-center gap-2 text-sm text-zinc-500">
