@@ -1,6 +1,6 @@
 "use client";
 import { useState, useTransition } from "react";
-import { Square, ScrollText } from "lucide-react";
+import { Square, ScrollText, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Card, CardBody, CardHeader, CardTitle } from "@/app/components/ui/Card";
 import { Button } from "@/app/components/ui/Button";
@@ -8,6 +8,7 @@ import { AlertDialog } from "@/app/components/ui/Dialog";
 import { toast } from "@/app/components/ui/Toast";
 import { rpc } from "@/lib/rpc/client";
 import { RecipeShowDialog } from "@/app/components/recipes/RecipeShowDialog";
+import { useWorkloadHealth } from "@/app/components/useWorkloadHealth";
 import type { Workload } from "@/lib/schemas";
 
 export function WorkloadCard({
@@ -20,6 +21,7 @@ export function WorkloadCard({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [recipeOpen, setRecipeOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const health = useWorkloadHealth(workload.cluster_id);
 
   const label = workload.meta.model || workload.meta.recipe || workload.cluster_id;
 
@@ -69,19 +71,10 @@ export function WorkloadCard({
                 <dd className="font-mono text-zinc-700 dark:text-zinc-300">{workload.host}</dd>
               </>
             )}
-            {workload.status && (
-              <>
-                <dt className="text-zinc-500 dark:text-zinc-400">Status</dt>
-                <dd>
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                    <span className="text-zinc-700 capitalize dark:text-zinc-300">
-                      {workload.status}
-                    </span>
-                  </span>
-                </dd>
-              </>
-            )}
+            <dt className="text-zinc-500 dark:text-zinc-400">Status</dt>
+            <dd>
+              <ReadyBadge health={health} containerStatus={workload.status} />
+            </dd>
           </dl>
           <div className="flex justify-end gap-2 pt-2">
             <Link href={`/logs/${workload.cluster_id}`}>
@@ -127,5 +120,51 @@ export function WorkloadCard({
         />
       )}
     </>
+  );
+}
+
+function ReadyBadge({
+  health,
+  containerStatus,
+}: {
+  health: ReturnType<typeof useWorkloadHealth>;
+  containerStatus?: string;
+}) {
+  if (health.ready) {
+    return (
+      <span className="inline-flex items-center gap-1.5">
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+        <span className="text-zinc-700 dark:text-zinc-300">Ready</span>
+      </span>
+    );
+  }
+  if (health.state === "loading") {
+    // First probe in flight — show the docker status if we have it so the
+    // card isn't blank during the initial poll.
+    return (
+      <span className="inline-flex items-center gap-1.5">
+        <Loader2 size={10} className="animate-spin text-zinc-400" />
+        <span className="text-zinc-500 capitalize dark:text-zinc-400">
+          {containerStatus ?? "Checking…"}
+        </span>
+      </span>
+    );
+  }
+  if (health.state === "starting") {
+    return (
+      <span className="inline-flex items-center gap-1.5">
+        <Loader2 size={10} className="animate-spin text-amber-500" />
+        <span className="text-amber-700 dark:text-amber-300">Starting…</span>
+      </span>
+    );
+  }
+  // unreachable / not_found
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+      <span className="text-red-700 dark:text-red-300" title={health.reason ?? undefined}>
+        Unreachable
+      </span>
+    </span>
   );
 }

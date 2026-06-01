@@ -15,6 +15,7 @@ export const router = {
   },
   workloads: {
     stop: workloads.stop,
+    health: workloads.health,
   },
   recipes: {
     list: recipes.list,
