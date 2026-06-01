@@ -1,6 +1,5 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Loader2, Play, RefreshCw } from "lucide-react";
 import { Button } from "@/app/components/ui/Button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/app/components/ui/Card";
@@ -14,14 +13,15 @@ import type { ClusterEntry, RecipeListItem, ValidationIssue } from "@/lib/schema
 import { YamlEditor } from "./YamlEditor";
 import { OverridesForm } from "./OverridesForm";
 import { IssueList } from "./IssueList";
+import { LogStream } from "@/app/components/logs/LogStream";
 
-type Step = "select" | "edit" | "preview" | "confirm";
+type Step = "select" | "edit" | "preview" | "logs";
 
 const STEPS: { id: Step; label: string }[] = [
   { id: "select", label: "Select recipe" },
   { id: "edit", label: "Edit & validate" },
   { id: "preview", label: "Preview" },
-  { id: "confirm", label: "Confirm & launch" },
+  { id: "logs", label: "Logs" },
 ];
 
 function genDraftId(): string {
@@ -39,7 +39,6 @@ export function LaunchWizard({
   defaultClusterName: string | null;
   initialRecipe?: string;
 }) {
-  const router = useRouter();
   const [step, setStep] = useState<Step>(initialRecipe ? "edit" : "select");
   const [selected, setSelected] = useState<string | null>(initialRecipe ?? null);
   const [yamlText, setYamlText] = useState<string>("");
@@ -57,6 +56,7 @@ export function LaunchWizard({
   const [previewing, setPreviewing] = useState(false);
 
   const [launching, setLaunching] = useState(false);
+  const [launchedClusterId, setLaunchedClusterId] = useState<string | null>(null);
   const [stoppingId, setStoppingId] = useState<string | null>(null);
 
   const portConflicts = useMemo(
@@ -190,12 +190,40 @@ export function LaunchWizard({
         "Launch requested",
         `${selected} is starting on ${cluster || "default cluster"}`,
       );
-      router.push("/dashboard");
+      setStep("logs");
     } catch (err) {
       toast.error("Launch failed", err instanceof Error ? err.message : String(err));
+    } finally {
       setLaunching(false);
     }
-  }, [yamlText, draftId, cluster, selected, router]);
+  }, [yamlText, draftId, cluster, selected]);
+
+  // Once on the logs step, poll status until the workload for this draft shows up
+  // (sparkrun assigns the cluster_id asynchronously after `run` is invoked).
+  useEffect(() => {
+    if (step !== "logs" || launchedClusterId) return;
+    const ac = new AbortController();
+    let cancelled = false;
+    (async () => {
+      try {
+        const iter = await rpc.status.stream({ intervalMs: 1500 }, { signal: ac.signal });
+        for await (const next of iter) {
+          if (cancelled) break;
+          const match = next.solo_entries.find((w) => w.meta.recipe?.includes(draftId));
+          if (match) {
+            setLaunchedClusterId(match.cluster_id);
+            break;
+          }
+        }
+      } catch {
+        // silent on abort
+      }
+    })();
+    return () => {
+      cancelled = true;
+      ac.abort();
+    };
+  }, [step, launchedClusterId, draftId]);
 
   const hasErrors = issues.some((i) => i.severity === "error");
   const canAdvanceFromEdit = validatedOnce && !hasErrors;
@@ -312,7 +340,7 @@ export function LaunchWizard({
         </div>
       )}
 
-      {(step === "preview" || step === "confirm") && yamlText && (
+      {step === "preview" && yamlText && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
@@ -346,7 +374,29 @@ export function LaunchWizard({
         </Card>
       )}
 
-      {step !== "select" && (
+      {step === "logs" && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-mono text-sm">{selected}</CardTitle>
+            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+              {recipesByName[selected ?? ""]?.model} · cluster{" "}
+              <span className="font-mono">{cluster || "default"}</span>
+            </p>
+          </CardHeader>
+          <CardBody>
+            {launchedClusterId ? (
+              <LogStream clusterId={launchedClusterId} tail={200} />
+            ) : (
+              <div className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
+                <Loader2 size={14} className="animate-spin" />
+                Waiting for the workload to start…
+              </div>
+            )}
+          </CardBody>
+        </Card>
+      )}
+
+      {step !== "select" && step !== "logs" && (
         <div className="flex items-center justify-between border-t border-zinc-200 pt-4 dark:border-zinc-800">
           <Button
             variant="ghost"
@@ -373,13 +423,11 @@ export function LaunchWizard({
               </Button>
             )}
             {step === "preview" && (
-              <Button variant="primary" disabled={!preview?.ok} onClick={() => setStep("confirm")}>
-                Continue
-                <ArrowRight size={14} />
-              </Button>
-            )}
-            {step === "confirm" && (
-              <Button variant="primary" onClick={launch} disabled={launching || hasErrors}>
+              <Button
+                variant="primary"
+                onClick={launch}
+                disabled={launching || hasErrors || !preview?.ok}
+              >
                 {launching ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
                 {launching ? "Launching…" : `Launch on ${cluster || "default"}`}
               </Button>
