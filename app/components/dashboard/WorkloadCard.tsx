@@ -27,6 +27,7 @@ export function WorkloadCard({
 
   const label = workload.meta.model || workload.meta.recipe || workload.cluster_id;
   const uptime = parseWorkloadUptime(workload.status);
+  const recipeShowKey = recipe?.registeredName ?? workload.meta.recipe;
 
   const handleStop = () => {
     startTransition(async () => {
@@ -52,13 +53,13 @@ export function WorkloadCard({
               <>
                 <dt className="text-zinc-500 dark:text-zinc-400">Recipe</dt>
                 <dd>
-                  {recipe.registeredName ? (
+                  {recipeShowKey ? (
                     <button
                       type="button"
                       onClick={() => setRecipeOpen(true)}
                       className="cursor-pointer font-medium text-sky-600 hover:underline dark:text-sky-400"
                     >
-                      {recipe.registeredName}
+                      {recipe.label}
                     </button>
                   ) : (
                     <span className="font-medium text-zinc-700 dark:text-zinc-300">
@@ -134,9 +135,10 @@ export function WorkloadCard({
         destructive
         onConfirm={handleStop}
       />
-      {recipe?.registeredName && (
+      {recipe && recipeShowKey && (
         <RecipeShowDialog
-          name={recipe.registeredName}
+          name={recipeShowKey}
+          title={recipe.label}
           open={recipeOpen}
           onOpenChange={(o) => !o && setRecipeOpen(false)}
           showLaunch={false}
