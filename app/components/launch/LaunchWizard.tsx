@@ -194,7 +194,7 @@ export function LaunchWizard({
       );
       setStep("logs");
     } catch (err) {
-      toast.error("Launch failed", err instanceof Error ? err.message : String(err));
+      toast.error("Launch failed", launchErrorDetail(err));
     } finally {
       setLaunching(false);
     }
@@ -483,4 +483,16 @@ function Steps({ current }: { current: Step }) {
       })}
     </ol>
   );
+}
+
+// Prefer the captured sparkrun stderr when the RPC failure carries it
+// (issue #67 — previously the user only saw a generic "exit N" message).
+function launchErrorDetail(err: unknown): string {
+  if (err && typeof err === "object" && "data" in err) {
+    const data = (err as { data?: { stderr?: unknown } }).data;
+    if (data && typeof data.stderr === "string" && data.stderr.trim()) {
+      return data.stderr.trim().split("\n").slice(-4).join("\n");
+    }
+  }
+  return err instanceof Error ? err.message : String(err);
 }
