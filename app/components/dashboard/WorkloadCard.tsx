@@ -10,13 +10,15 @@ import { rpc } from "@/lib/rpc/client";
 import { RecipeShowDialog } from "@/app/components/recipes/RecipeShowDialog";
 import { useWorkloadHealth } from "@/app/components/useWorkloadHealth";
 import type { Workload } from "@/lib/schemas";
+import type { RunningRecipeDisplay } from "@/lib/runningRecipes";
+import { parseWorkloadUptime } from "@/lib/workloadStatus";
 
 export function WorkloadCard({
   workload,
-  recipeName,
+  recipe,
 }: {
   workload: Workload;
-  recipeName?: string;
+  recipe?: RunningRecipeDisplay;
 }) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [recipeOpen, setRecipeOpen] = useState(false);
@@ -24,6 +26,7 @@ export function WorkloadCard({
   const health = useWorkloadHealth(workload.cluster_id);
 
   const label = workload.meta.model || workload.meta.recipe || workload.cluster_id;
+  const uptime = parseWorkloadUptime(workload.status);
 
   const handleStop = () => {
     startTransition(async () => {
@@ -45,17 +48,23 @@ export function WorkloadCard({
         </CardHeader>
         <CardBody className="flex flex-col gap-3 text-sm">
           <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
-            {recipeName && (
+            {recipe && (
               <>
                 <dt className="text-zinc-500 dark:text-zinc-400">Recipe</dt>
                 <dd>
-                  <button
-                    type="button"
-                    onClick={() => setRecipeOpen(true)}
-                    className="cursor-pointer font-medium text-sky-600 hover:underline dark:text-sky-400"
-                  >
-                    {recipeName}
-                  </button>
+                  {recipe.registeredName ? (
+                    <button
+                      type="button"
+                      onClick={() => setRecipeOpen(true)}
+                      className="cursor-pointer font-medium text-sky-600 hover:underline dark:text-sky-400"
+                    >
+                      {recipe.registeredName}
+                    </button>
+                  ) : (
+                    <span className="font-medium text-zinc-700 dark:text-zinc-300">
+                      {recipe.label}
+                    </span>
+                  )}
                 </dd>
               </>
             )}
@@ -69,6 +78,12 @@ export function WorkloadCard({
               <>
                 <dt className="text-zinc-500 dark:text-zinc-400">Host</dt>
                 <dd className="font-mono text-zinc-700 dark:text-zinc-300">{workload.host}</dd>
+              </>
+            )}
+            {uptime && (
+              <>
+                <dt className="text-zinc-500 dark:text-zinc-400">Uptime</dt>
+                <dd className="text-zinc-700 dark:text-zinc-300">{uptime}</dd>
               </>
             )}
             <dt className="text-zinc-500 dark:text-zinc-400">Status</dt>
@@ -119,9 +134,9 @@ export function WorkloadCard({
         destructive
         onConfirm={handleStop}
       />
-      {recipeName && (
+      {recipe?.registeredName && (
         <RecipeShowDialog
-          name={recipeName}
+          name={recipe.registeredName}
           open={recipeOpen}
           onOpenChange={(o) => !o && setRecipeOpen(false)}
           showLaunch={false}
