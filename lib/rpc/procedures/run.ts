@@ -1,7 +1,7 @@
-import { os, ORPCError } from "@orpc/server";
+import { os, ORPCError, eventIterator } from "@orpc/server";
 import { z } from "zod";
 import { writeDraft, writeDraftMeta } from "@/lib/draft";
-import { runSparkrun } from "@/lib/sparkrun";
+import { runSparkrun, streamSparkrunLines } from "@/lib/sparkrun";
 
 export const start = os
   .input(
@@ -50,4 +50,66 @@ export const start = os
       });
     }
     return { ok: true as const, draftPath: path };
+  });
+
+const LaunchEventSchema = z.object({
+  line: z.string(),
+  done: z.boolean().optional(),
+  ok: z.boolean().optional(),
+  draftPath: z.string().optional(),
+  error: z.string().optional(),
+});
+
+export const startStream = os
+  .input(
+    z.object({
+      yaml: z.string(),
+      draftId: z.string().regex(/^[a-zA-Z0-9_-]+$/),
+      hosts: z.array(z.string()).optional(),
+      cluster: z.string().optional(),
+      tp: z.number().int().min(1).optional(),
+      recipeName: z.string().optional(),
+    }),
+  )
+  .output(eventIterator(LaunchEventSchema))
+  .handler(async function* ({ input, signal }) {
+    yield { line: "Writing draft…" };
+
+    const path = await writeDraft(input.draftId, input.yaml);
+    if (input.recipeName) {
+      await writeDraftMeta(input.draftId, { recipeName: input.recipeName });
+    }
+
+    yield { line: "Validating recipe…" };
+
+    const validate = await runSparkrun(["recipe", "validate", path, "--json"]);
+    if (validate.code !== 0) {
+      yield {
+        line: "",
+        done: true,
+        ok: false,
+        error: validate.stderr.trim() || "Recipe validation failed",
+      };
+      return;
+    }
+
+    const args = ["run", path, "--no-follow"];
+    if (input.cluster) args.push("--cluster", input.cluster);
+    else if (input.hosts?.length) args.push("--hosts", input.hosts.join(","));
+    if (input.tp) args.push("--tp", String(input.tp));
+
+    yield { line: `Running: sparkrun ${args.join(" ")}` };
+
+    try {
+      for await (const line of streamSparkrunLines(args, { signal, includeStderr: true })) {
+        if (signal?.aborted) break;
+        yield { line };
+      }
+    } catch (err) {
+      yield { line: `Error: ${(err as Error).message}` };
+      yield { line: "", done: true, ok: false, error: (err as Error).message };
+      return;
+    }
+
+    yield { line: "", done: true };
   });
