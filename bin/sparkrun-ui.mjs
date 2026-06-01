@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
@@ -73,7 +73,49 @@ if (probe.error || probe.status !== 0) {
   );
 }
 
-const serverEntry = resolve(HERE, "../dist/server.js");
+// Published npm tarball ships the prebuilt bundle under `dist/`. When this
+// script is invoked from a source checkout (e.g. `npx sparkrun-ui` inside the
+// repo), there is no `dist/` — fall back to the raw Next.js standalone output
+// so a `pnpm build` is enough to run without a separate `pack:standalone`.
+const projectRoot = resolve(HERE, "..");
+const distEntry = resolve(projectRoot, "dist/server.js");
+const standaloneEntry = resolve(projectRoot, ".next/standalone/server.js");
+
+let serverEntry = [distEntry, standaloneEntry].find((p) => existsSync(p));
+
+if (!serverEntry) {
+  // Source checkout without a build yet — bootstrap it. Detect "source
+  // checkout" by the presence of next.config.ts so we never try to build
+  // inside a broken install of the published tarball.
+  if (!existsSync(resolve(projectRoot, "next.config.ts"))) {
+    process.stderr.write("sparkrun-ui: could not find a built server.\n");
+    process.exit(1);
+  }
+  const pnpmProbe = spawnSync("pnpm", ["--version"], { stdio: "ignore" });
+  if (pnpmProbe.error?.code === "ENOENT" || pnpmProbe.status !== 0) {
+    process.stderr.write(
+      "sparkrun-ui: no build found and `pnpm` is not on PATH.\n" +
+        "  Install pnpm (https://pnpm.io/installation) and retry, or run `pnpm build` manually.\n",
+    );
+    process.exit(1);
+  }
+  const run = (cmd, args) => {
+    process.stdout.write(`sparkrun-ui: running \`${cmd} ${args.join(" ")}\`\n`);
+    const r = spawnSync(cmd, args, { cwd: projectRoot, stdio: "inherit" });
+    if (r.status !== 0) {
+      process.stderr.write(`sparkrun-ui: \`${cmd} ${args.join(" ")}\` failed\n`);
+      process.exit(r.status ?? 1);
+    }
+  };
+  run("pnpm", ["install"]);
+  run("pnpm", ["build"]);
+  if (!existsSync(standaloneEntry)) {
+    process.stderr.write(`sparkrun-ui: build did not produce ${standaloneEntry}\n`);
+    process.exit(1);
+  }
+  serverEntry = standaloneEntry;
+}
+
 process.stdout.write(
   `sparkrun-ui ${PKG.version} listening on http://${process.env.HOSTNAME}:${port}\n`,
 );
