@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
-import { Rocket, Search } from "lucide-react";
+import { Rocket, Search, X } from "lucide-react";
 import { Card, CardBody } from "@/app/components/ui/Card";
 import { Badge } from "@/app/components/ui/Badge";
 import { Button } from "@/app/components/ui/Button";
@@ -93,16 +93,36 @@ export function RecipesBrowser({
     })),
   ];
 
+  const hasActiveFilters = registry !== "all" || search !== "" || showRunningOnly;
+
+  const clearFilters = () => {
+    setRegistry("all");
+    setSearch("");
+    setShowRunningOnly(false);
+  };
+
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3">
         <div className="flex items-baseline gap-3">
           <h1 className="text-2xl font-semibold tracking-tight">Recipes</h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
             {filtered.length} of {recipes.length}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50 p-2 dark:border-zinc-800 dark:bg-zinc-900/40">
+          <div className="relative min-w-[12rem] flex-1">
+            <Search
+              size={14}
+              className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-zinc-400"
+            />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by name, model, runtime…"
+              className="bg-white pl-8 dark:bg-zinc-900"
+            />
+          </div>
           <div className="w-44">
             <Select
               value={registry}
@@ -111,23 +131,17 @@ export function RecipesBrowser({
               placeholder="Registry"
             />
           </div>
-          <div className="relative w-56">
-            <Search
-              size={14}
-              className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-zinc-400"
-            />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search…"
-              className="pl-8"
-            />
-          </div>
-          <label className="flex cursor-pointer items-center gap-2 text-xs text-zinc-600 select-none dark:text-zinc-400">
+          <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-xs text-zinc-600 select-none hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800">
             <Switch checked={showRunningOnly} onCheckedChange={setShowRunningOnly} />
             Running
             {runningCount > 0 && <span className="text-zinc-400">({runningCount})</span>}
           </label>
+          {hasActiveFilters && (
+            <Button variant="ghost" size="sm" onClick={clearFilters}>
+              <X size={14} />
+              Clear
+            </Button>
+          )}
         </div>
       </div>
 
