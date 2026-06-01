@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Rocket } from "lucide-react";
 import { rpc } from "@/lib/rpc/client";
 import type { ClusterStatus } from "@/lib/schemas";
+import type { RunningRecipeDisplay } from "@/lib/runningRecipes";
 import { Card, CardBody } from "@/app/components/ui/Card";
 import { Badge } from "@/app/components/ui/Badge";
 import { Button } from "@/app/components/ui/Button";
@@ -12,10 +13,10 @@ import { AggregateStats } from "./AggregateStats";
 
 export function DashboardLive({
   initial,
-  recipeNameByCluster,
+  recipeByCluster,
 }: {
   initial: ClusterStatus;
-  recipeNameByCluster: Map<string, string>;
+  recipeByCluster: Map<string, RunningRecipeDisplay>;
 }) {
   const [status, setStatus] = useState<ClusterStatus>(initial);
   const [connected, setConnected] = useState(true);
@@ -91,7 +92,7 @@ export function DashboardLive({
               <WorkloadCard
                 key={w.cluster_id}
                 workload={w}
-                recipeName={recipeNameByCluster.get(w.cluster_id)}
+                recipe={recipeByCluster.get(w.cluster_id)}
               />
             ))}
           </div>

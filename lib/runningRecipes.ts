@@ -67,3 +67,36 @@ export async function collectRunningRecipeNames(
   }
   return runningRecipes;
 }
+
+export type RunningRecipeDisplay = {
+  /** Registered recipe name when resolvable — gives the card a link target. */
+  registeredName?: string;
+  /** Always-set label suitable for showing in the UI. */
+  label: string;
+};
+
+/**
+ * Resolve a display label for a running workload's recipe. Returns the
+ * registered name when we can map back to the recipe catalog; otherwise
+ * falls back to the raw recipe state name or the recipe file basename so the
+ * card never goes blank.
+ */
+export async function resolveRunningRecipeDisplay(
+  workload: Workload,
+  recipes: RecipeListItem[],
+  readMeta: DraftMetaReader = readDraftMeta,
+): Promise<RunningRecipeDisplay | null> {
+  const registered = await resolveRunningRecipeName(workload, recipes, readMeta);
+  if (registered) return { registeredName: registered, label: registered };
+
+  const rawName = getRecipeStateRawName(workload.meta?.recipe_state);
+  if (rawName) return { label: rawName };
+
+  const recipePath = workload.meta?.recipe;
+  if (recipePath) {
+    const basename = recipePath.split("/").pop()?.replace(/\.ya?ml$/, "");
+    if (basename) return { label: basename };
+  }
+
+  return null;
+}

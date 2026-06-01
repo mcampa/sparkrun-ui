@@ -6,6 +6,7 @@ import {
   collectRunningRecipeNames,
   extractDraftId,
   getRecipeStateRawName,
+  resolveRunningRecipeDisplay,
   resolveRunningRecipeName,
   resolveRunningRecipeNameByFile,
   resolveRunningRecipeNameByPath,
@@ -99,5 +100,52 @@ describe("runningRecipes", () => {
   it("collectRunningRecipeNames skips workloads without recipe paths", async () => {
     const workload: Workload = { cluster_id: "sparkrun_test", meta: { overrides: {} } };
     await expect(collectRunningRecipeNames([workload], [sampleRecipe])).resolves.toEqual([]);
+  });
+
+  it("resolveRunningRecipeDisplay returns the registered name when resolvable", async () => {
+    const workload: Workload = {
+      cluster_id: "sparkrun_test",
+      meta: {
+        overrides: {},
+        recipe: sampleRecipe.path,
+      },
+    };
+    await expect(
+      resolveRunningRecipeDisplay(workload, [sampleRecipe], async () => null),
+    ).resolves.toEqual({ registeredName: sampleRecipe.name, label: sampleRecipe.name });
+  });
+
+  it("resolveRunningRecipeDisplay falls back to raw recipe name when unresolved", async () => {
+    const workload: Workload = {
+      cluster_id: "sparkrun_test",
+      meta: {
+        overrides: {},
+        recipe: "/tmp/sparkrun-ui-drafts/draft123.yaml",
+        recipe_state: { _raw: { name: "custom-recipe" } },
+      },
+    };
+    await expect(
+      resolveRunningRecipeDisplay(workload, [], async () => null),
+    ).resolves.toEqual({ label: "custom-recipe" });
+  });
+
+  it("resolveRunningRecipeDisplay falls back to recipe path basename", async () => {
+    const workload: Workload = {
+      cluster_id: "sparkrun_test",
+      meta: {
+        overrides: {},
+        recipe: "/opt/recipes/some-recipe.yaml",
+      },
+    };
+    await expect(
+      resolveRunningRecipeDisplay(workload, [], async () => null),
+    ).resolves.toEqual({ label: "some-recipe" });
+  });
+
+  it("resolveRunningRecipeDisplay returns null when there's nothing to show", async () => {
+    const workload: Workload = { cluster_id: "sparkrun_test", meta: { overrides: {} } };
+    await expect(
+      resolveRunningRecipeDisplay(workload, [], async () => null),
+    ).resolves.toBeNull();
   });
 });
