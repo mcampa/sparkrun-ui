@@ -32,6 +32,7 @@ export const router = {
   },
   run: {
     start: run.start,
+    startStream: run.startStream,
   },
   benchmarks: {
     list: benchmarks.list,

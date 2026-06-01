@@ -15,6 +15,7 @@ import { YamlEditor } from "./YamlEditor";
 import { OverridesForm } from "./OverridesForm";
 import { IssueList } from "./IssueList";
 import { LogStream } from "@/app/components/logs/LogStream";
+import { LaunchProgressDialog } from "./LaunchProgressDialog";
 
 type Step = "select" | "edit" | "preview" | "logs";
 
@@ -57,7 +58,7 @@ export function LaunchWizard({
   );
   const [previewing, setPreviewing] = useState(false);
 
-  const [launching, setLaunching] = useState(false);
+  const [launchDialogOpen, setLaunchDialogOpen] = useState(false);
   const [launchedClusterId, setLaunchedClusterId] = useState<string | null>(null);
   const [stoppingId, setStoppingId] = useState<string | null>(null);
 
@@ -179,26 +180,9 @@ export function LaunchWizard({
     }
   }, [yamlText, draftId, cluster]);
 
-  const launch = useCallback(async () => {
-    setLaunching(true);
-    try {
-      await rpc.run.start({
-        yaml: yamlText,
-        draftId,
-        cluster: cluster || undefined,
-        recipeName: selected ?? undefined,
-      });
-      toast.success(
-        "Launch requested",
-        `${selected} is starting on ${cluster || "default cluster"}`,
-      );
-      setStep("logs");
-    } catch (err) {
-      toast.error("Launch failed", launchErrorDetail(err));
-    } finally {
-      setLaunching(false);
-    }
-  }, [yamlText, draftId, cluster, selected]);
+  const launch = useCallback(() => {
+    setLaunchDialogOpen(true);
+  }, []);
 
   // Once on the logs step, poll status until the workload for this draft shows up
   // (sparkrun assigns the cluster_id asynchronously after `run` is invoked).
@@ -404,6 +388,16 @@ export function LaunchWizard({
         </Card>
       )}
 
+      <LaunchProgressDialog
+        open={launchDialogOpen}
+        onOpenChange={setLaunchDialogOpen}
+        onSuccess={() => setStep("logs")}
+        yaml={yamlText}
+        draftId={draftId}
+        cluster={cluster || undefined}
+        recipeName={selected ?? undefined}
+      />
+
       {step !== "select" && step !== "logs" && (
         <div className="flex items-center justify-between border-t border-zinc-200 pt-4 dark:border-zinc-800">
           <Button
@@ -431,13 +425,9 @@ export function LaunchWizard({
               </Button>
             )}
             {step === "preview" && (
-              <Button
-                variant="primary"
-                onClick={launch}
-                disabled={launching || hasErrors || !preview?.ok}
-              >
-                {launching ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
-                {launching ? "Launching…" : `Launch on ${cluster || "default"}`}
+              <Button variant="primary" onClick={launch} disabled={hasErrors || !preview?.ok}>
+                <Play size={14} />
+                Launch on {cluster || "default"}
               </Button>
             )}
           </div>
@@ -483,16 +473,4 @@ function Steps({ current }: { current: Step }) {
       })}
     </ol>
   );
-}
-
-// Prefer the captured sparkrun stderr when the RPC failure carries it
-// (issue #67 — previously the user only saw a generic "exit N" message).
-function launchErrorDetail(err: unknown): string {
-  if (err && typeof err === "object" && "data" in err) {
-    const data = (err as { data?: { stderr?: unknown } }).data;
-    if (data && typeof data.stderr === "string" && data.stderr.trim()) {
-      return data.stderr.trim().split("\n").slice(-4).join("\n");
-    }
-  }
-  return err instanceof Error ? err.message : String(err);
 }
