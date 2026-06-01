@@ -124,9 +124,9 @@ describe("runningRecipes", () => {
         recipe_state: { _raw: { name: "custom-recipe" } },
       },
     };
-    await expect(
-      resolveRunningRecipeDisplay(workload, [], async () => null),
-    ).resolves.toEqual({ label: "custom-recipe" });
+    await expect(resolveRunningRecipeDisplay(workload, [], async () => null)).resolves.toEqual({
+      label: "custom-recipe",
+    });
   });
 
   it("resolveRunningRecipeDisplay falls back to recipe path basename", async () => {
@@ -137,15 +137,13 @@ describe("runningRecipes", () => {
         recipe: "/opt/recipes/some-recipe.yaml",
       },
     };
-    await expect(
-      resolveRunningRecipeDisplay(workload, [], async () => null),
-    ).resolves.toEqual({ label: "some-recipe" });
+    await expect(resolveRunningRecipeDisplay(workload, [], async () => null)).resolves.toEqual({
+      label: "some-recipe",
+    });
   });
 
   it("resolveRunningRecipeDisplay returns null when there's nothing to show", async () => {
     const workload: Workload = { cluster_id: "sparkrun_test", meta: { overrides: {} } };
-    await expect(
-      resolveRunningRecipeDisplay(workload, [], async () => null),
-    ).resolves.toBeNull();
+    await expect(resolveRunningRecipeDisplay(workload, [], async () => null)).resolves.toBeNull();
   });
 });

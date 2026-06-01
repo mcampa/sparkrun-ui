@@ -94,7 +94,10 @@ export async function resolveRunningRecipeDisplay(
 
   const recipePath = workload.meta?.recipe;
   if (recipePath) {
-    const basename = recipePath.split("/").pop()?.replace(/\.ya?ml$/, "");
+    const basename = recipePath
+      .split("/")
+      .pop()
+      ?.replace(/\.ya?ml$/, "");
     if (basename) return { label: basename };
   }
 
