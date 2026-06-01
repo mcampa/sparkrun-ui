@@ -1,8 +1,9 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Loader2, Play, RefreshCw } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, ArrowRight, Check, Loader2, Play, RefreshCw } from "lucide-react";
 import { Button } from "@/app/components/ui/Button";
-import { Card, CardBody, CardHeader, CardTitle } from "@/app/components/ui/Card";
+import { Card, CardBody, CardFooter, CardHeader, CardTitle } from "@/app/components/ui/Card";
 import { Badge } from "@/app/components/ui/Badge";
 import { Tabs } from "@/app/components/ui/Tabs";
 import { Select } from "@/app/components/ui/Select";
@@ -39,6 +40,7 @@ export function LaunchWizard({
   defaultClusterName: string | null;
   initialRecipe?: string;
 }) {
+  const router = useRouter();
   const [step, setStep] = useState<Step>(initialRecipe ? "edit" : "select");
   const [selected, setSelected] = useState<string | null>(initialRecipe ?? null);
   const [yamlText, setYamlText] = useState<string>("");
@@ -393,6 +395,12 @@ export function LaunchWizard({
               </div>
             )}
           </CardBody>
+          <CardFooter>
+            <Button variant="primary" onClick={() => router.push("/dashboard")}>
+              <Check size={14} />
+              Done
+            </Button>
+          </CardFooter>
         </Card>
       )}
 
