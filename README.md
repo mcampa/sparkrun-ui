@@ -59,14 +59,14 @@ The fastest way to try it. Requires Node 20+ and `sparkrun` already on `$PATH`:
 
 ```bash
 npx sparkrun-ui
-# → http://127.0.0.1:3000
+# → http://0.0.0.0:3000 (reachable on the LAN; use --host 127.0.0.1 for loopback only)
 ```
 
 Common flags:
 
 ```bash
 npx sparkrun-ui --port 4000           # change the port
-npx sparkrun-ui --host 0.0.0.0        # expose on the network
+npx sparkrun-ui --host 127.0.0.1      # bind loopback only (not exposed on the network)
 npx sparkrun-ui --sparkrun-bin /opt/sparkrun/bin/sparkrun
 ```
 

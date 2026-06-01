@@ -17,7 +17,7 @@ Usage:
 
 Options:
   -p, --port <port>           Port to listen on (default: 3000)
-  -H, --host <host>           Host/interface to bind (default: 127.0.0.1, use 0.0.0.0 to expose)
+  -H, --host <host>           Host/interface to bind (default: 0.0.0.0)
       --sparkrun-bin <path>   Path to the sparkrun CLI (default: \`sparkrun\` on PATH)
   -h, --help                  Show this message
   -v, --version               Print the version
@@ -59,7 +59,7 @@ if (!/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535) {
 }
 
 process.env.PORT = port;
-process.env.HOSTNAME = values.host ?? process.env.HOSTNAME ?? "127.0.0.1";
+process.env.HOSTNAME = values.host ?? process.env.HOSTNAME ?? "0.0.0.0";
 if (values["sparkrun-bin"]) process.env.SPARKRUN_BIN = values["sparkrun-bin"];
 
 // Friendly heads-up if the sparkrun CLI isn't reachable. Don't hard-fail —
