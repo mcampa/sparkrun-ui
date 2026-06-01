@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUp, Bot, MessageSquarePlus, Sparkles, Square } from "lucide-react";
+import { ArrowUp, Bot, Loader2, MessageSquarePlus, Sparkles, Square } from "lucide-react";
 import { rpc } from "@/lib/rpc/client";
 import type { ClusterStatus } from "@/lib/schemas";
 import { Select } from "@/app/components/ui/Select";
 import { Button } from "@/app/components/ui/Button";
+import { useWorkloadHealth } from "@/app/components/useWorkloadHealth";
 
 type Message = { role: "user" | "assistant"; content: string };
 
@@ -37,6 +38,8 @@ export function ChatPage({ initial }: { initial: ClusterStatus }) {
       ? explicitClusterId
       : (instances[0]?.value ?? null);
   const selectedInstance = instances.find((i) => i.value === selectedClusterId) ?? null;
+  const health = useWorkloadHealth(selectedClusterId);
+  const isReady = health.ready;
   const hasConversation = messages.length > 0;
 
   // Live status updates
@@ -93,7 +96,7 @@ export function ChatPage({ initial }: { initial: ClusterStatus }) {
 
   const handleSend = async () => {
     const text = inputText.trim();
-    if (!text || !selectedClusterId || isStreaming) return;
+    if (!text || !selectedClusterId || isStreaming || !isReady) return;
 
     const userMsg: Message = { role: "user", content: text };
     const newMessages = [...messages, userMsg];
@@ -191,7 +194,7 @@ export function ChatPage({ initial }: { initial: ClusterStatus }) {
           className="max-h-[200px] w-full resize-none rounded-t-2xl bg-transparent px-4 pt-3 pb-1 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none disabled:cursor-not-allowed dark:text-zinc-100 dark:placeholder:text-zinc-500"
         />
         <div className="flex items-center justify-between gap-2 px-2 pb-2">
-          <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
             <Select
               value={selectedClusterId}
               onValueChange={handleClusterChange}
@@ -199,6 +202,7 @@ export function ChatPage({ initial }: { initial: ClusterStatus }) {
               placeholder="Select an instance…"
               className="h-8 max-w-[18rem] border-transparent bg-transparent shadow-none hover:bg-zinc-100 dark:border-transparent dark:bg-transparent dark:hover:bg-zinc-800"
             />
+            {selectedClusterId && <HealthPill health={health} />}
           </div>
           {isStreaming ? (
             <button
@@ -213,8 +217,9 @@ export function ChatPage({ initial }: { initial: ClusterStatus }) {
             <button
               type="button"
               onClick={handleSend}
-              disabled={!inputText.trim() || !selectedClusterId}
-              aria-label="Send message"
+              disabled={!inputText.trim() || !selectedClusterId || !isReady}
+              aria-label={isReady ? "Send message" : "Instance not ready yet"}
+              title={isReady ? undefined : (health.reason ?? "Instance is still starting…")}
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:bg-zinc-300 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300 dark:disabled:bg-zinc-700 dark:disabled:text-zinc-500"
             >
               <ArrowUp size={16} />
@@ -310,5 +315,36 @@ function MessageRow({ message, isStreamingTail }: { message: Message; isStreamin
         )}
       </div>
     </div>
+  );
+}
+
+function HealthPill({ health }: { health: ReturnType<typeof useWorkloadHealth> }) {
+  if (health.ready) {
+    return (
+      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+        Ready
+      </span>
+    );
+  }
+  if (health.state === "loading" || health.state === "starting") {
+    return (
+      <span
+        className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-300"
+        title={health.state === "starting" ? (health.reason ?? "Model is still loading.") : ""}
+      >
+        <Loader2 size={10} className="animate-spin" />
+        Starting…
+      </span>
+    );
+  }
+  return (
+    <span
+      className="inline-flex shrink-0 items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-700 dark:bg-red-950 dark:text-red-300"
+      title={health.reason ?? "Instance is unreachable."}
+    >
+      <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+      Unreachable
+    </span>
   );
 }
