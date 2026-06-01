@@ -26,8 +26,8 @@ browser.
 | :---------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------: |
 |                  [![Dashboard](docs/screenshots/dashboard.png)](docs/screenshots/dashboard.png)        |        [![Recipes](docs/screenshots/recipes.png)](docs/screenshots/recipes.png)          |   [![Launch — YAML editor](docs/screenshots/launch-yaml.png)](docs/screenshots/launch-yaml.png)   |
 |                                              Dashboard                                                |                                       Recipes                                            |                                Launch — YAML editor                                   |
-| [![Launch — overrides form](docs/screenshots/launch-overrides.png)](docs/screenshots/launch-overrides.png) |            [![Chat](docs/screenshots/chat.jpg)](docs/screenshots/chat.jpg)               | [![More coming](https://placehold.co/1600x1200/09090b/fafafa/png?text=More+coming%E2%80%A6)](#screenshots) |
-|                                       Launch — overrides form                                         |                                         Chat                                             |                                    More coming…                                       |
+| [![Launch — overrides form](docs/screenshots/launch-overrides.png)](docs/screenshots/launch-overrides.png) | [![Launch — logs](docs/screenshots/launch-logs.png)](docs/screenshots/launch-logs.png)  |              [![Chat](docs/screenshots/chat.jpg)](docs/screenshots/chat.jpg)          |
+|                                       Launch — overrides form                                         |                                    Launch — logs                                         |                                         Chat                                          |
 
 ## Run with npx
 
