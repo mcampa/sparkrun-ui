@@ -39,15 +39,22 @@ export const stream = os
       });
     }
 
-    const url = `http://${host}:${port}/v1/chat/completions`;
-    const body: Record<string, unknown> = {
+    const baseUrl = `http://${host}:${port}`;
+    const resolvedModel = model ?? (await fetchServedModel(baseUrl, signal));
+    if (!resolvedModel) {
+      throw new ORPCError("INTERNAL_SERVER_ERROR", {
+        message: `Could not determine the served model name for ${clusterId}.`,
+      });
+    }
+
+    const body = {
+      model: resolvedModel,
       messages,
       stream: true,
       max_tokens: 2048,
     };
-    if (model) body.model = model;
 
-    const response = await fetch(url, {
+    const response = await fetch(`${baseUrl}/v1/chat/completions`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -99,3 +106,23 @@ export const stream = os
       reader.releaseLock();
     }
   });
+
+async function fetchServedModel(baseUrl: string, signal?: AbortSignal): Promise<string | null> {
+  try {
+    const res = await fetch(`${baseUrl}/v1/models`, { signal });
+    if (!res.ok) return null;
+    const data: unknown = await res.json();
+    if (
+      data &&
+      typeof data === "object" &&
+      "data" in data &&
+      Array.isArray((data as { data: unknown[] }).data)
+    ) {
+      const first = (data as { data: Array<{ id?: unknown }> }).data[0];
+      if (first && typeof first.id === "string") return first.id;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
