@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Nav } from "./Nav";
 import { HeaderStats } from "./HeaderStats";
+import { Footer } from "./Footer";
 
 export function Shell({ children }: { children: React.ReactNode }) {
   return (
@@ -22,6 +23,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
       <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-8">{children}</main>
+      <Footer />
     </div>
   );
 }
