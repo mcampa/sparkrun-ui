@@ -1,6 +1,6 @@
 "use client";
 import { useState, useTransition } from "react";
-import { Square, ScrollText, Loader2 } from "lucide-react";
+import { MessageSquare, Square, ScrollText, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Card, CardBody, CardHeader, CardTitle } from "@/app/components/ui/Card";
 import { Button } from "@/app/components/ui/Button";
@@ -77,6 +77,14 @@ export function WorkloadCard({
             </dd>
           </dl>
           <div className="flex justify-end gap-2 pt-2">
+            {workload.host && workload.meta.port && (
+              <Link href={`/chat?clusterId=${encodeURIComponent(workload.cluster_id)}`}>
+                <Button variant="ghost" size="sm">
+                  <MessageSquare size={14} />
+                  Chat
+                </Button>
+              </Link>
+            )}
             <Link href={`/logs/${workload.cluster_id}`}>
               <Button variant="ghost" size="sm">
                 <ScrollText size={14} />
