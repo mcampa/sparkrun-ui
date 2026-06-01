@@ -10,9 +10,17 @@ import { useWorkloadHealth } from "@/app/components/useWorkloadHealth";
 
 type Message = { role: "user" | "assistant"; content: string };
 
-export function ChatPage({ initial }: { initial: ClusterStatus }) {
+export function ChatPage({
+  initial,
+  initialClusterId,
+}: {
+  initial: ClusterStatus;
+  initialClusterId?: string;
+}) {
   const [status, setStatus] = useState<ClusterStatus>(initial);
-  const [explicitClusterId, setExplicitClusterId] = useState<string | null>(null);
+  const [explicitClusterId, setExplicitClusterId] = useState<string | null>(
+    initialClusterId ?? null,
+  );
   const [messages, setMessages] = useState<Message[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [inputText, setInputText] = useState("");
