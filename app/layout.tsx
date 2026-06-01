@@ -15,6 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(`http://localhost:${process.env.PORT ?? "5678"}`),
   title: "sparkrun",
   description: "Web UI for sparkrun — launch and monitor inference workloads on DGX Spark",
   applicationName: "sparkrun",
