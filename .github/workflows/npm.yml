@@ -1,0 +1,60 @@
+name: npm publish
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to publish (e.g. 1.2.3). Leave empty to use package.json.
+        required: false
+
+permissions:
+  contents: read
+  id-token: write # required for npm provenance
+
+concurrency:
+  group: npm-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Build & publish to npm
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Lint, typecheck, test
+        run: |
+          pnpm lint
+          pnpm typecheck
+          pnpm test
+
+      - name: Sync version with tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          echo "Publishing version $TAG"
+          npm version --no-git-tag-version --allow-same-version "$TAG"
+
+      - name: Sync version from workflow input
+        if: github.event_name == 'workflow_dispatch' && inputs.version != ''
+        run: npm version --no-git-tag-version --allow-same-version "${{ inputs.version }}"
+
+      - name: Publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --provenance --access public

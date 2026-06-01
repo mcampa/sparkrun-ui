@@ -9,6 +9,15 @@ const nextConfig: NextConfig = {
   // address needs `*.*.*.*`. `**` covers everything else (hostnames,
   // *.local, etc.).
   allowedDevOrigins: ["**", "*", "*.*.*.*"],
+  // The UI uses next/image once, with an SVG. Disabling the optimizer
+  // skips bundling `sharp`, which has platform-specific native binaries
+  // — important so the npm package works cross-platform via npx.
+  images: { unoptimized: true },
+  // Belt-and-braces: keep sharp and its libvips natives out of the
+  // standalone trace so the published bundle stays portable.
+  outputFileTracingExcludes: {
+    "*": ["**/node_modules/sharp/**", "**/node_modules/@img/**"],
+  },
 };
 
 export default nextConfig;
