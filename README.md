@@ -35,7 +35,7 @@ The fastest way to try it. Requires Node 20+ and `sparkrun` already on `$PATH`:
 
 ```bash
 npx sparkrun-ui
-# → http://0.0.0.0:3000 (reachable on the LAN; use --host 127.0.0.1 for loopback only)
+# → http://0.0.0.0:5678 (reachable on the LAN; use --host 127.0.0.1 for loopback only)
 ```
 
 Common flags:
@@ -82,19 +82,19 @@ docker run -d --name sparkrun-ui \
   ghcr.io/mcampa/sparkrun-ui:latest
 ```
 
-Open <http://localhost:3000>. `--network host` is required when your cluster
+Open <http://localhost:5678>. `--network host` is required when your cluster
 references `127.0.0.1`. See [mount reference](CONTRIBUTING.md#docker-volume-mounts)
 for what each volume does.
 
 ### Multi-host / remote cluster
 
 If your cluster uses LAN IPs (e.g. `192.168.0.40, 192.168.0.41`), drop
-`--network host` and publish port 3000:
+`--network host` and publish port 5678:
 
 ```bash
 docker run -d --name sparkrun-ui \
   --restart unless-stopped \
-  -p 3000:3000 \
+  -p 5678:5678 \
   -v $HOME/.local/bin/sparkrun:/usr/local/bin/sparkrun:ro \
   -v $HOME/.local/share/uv/tools/sparkrun:$HOME/.local/share/uv/tools/sparkrun:ro \
   -v $HOME/.ssh:/home/app/.ssh:ro \
@@ -120,7 +120,7 @@ docker compose up -d
 
 ## Configuration
 
-- `--port <port>` / `PORT` — port to listen on (default `3000`)
+- `--port <port>` / `PORT` — port to listen on (default `5678`)
 - `--host <host>` / `HOSTNAME` — interface to bind (default `0.0.0.0`)
 - `--sparkrun-bin <path>` / `SPARKRUN_BIN` — path to the sparkrun binary
   (default: `sparkrun` on `$PATH`)

@@ -56,7 +56,7 @@ WORKDIR /home/app/app
 ENV HOME=/home/app \
     NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
-    PORT=3000 \
+    PORT=5678 \
     HOSTNAME=0.0.0.0 \
     SPARKRUN_BIN=sparkrun
 
@@ -65,7 +65,7 @@ COPY --chown=app:app --from=builder /app/.next/standalone ./
 COPY --chown=app:app --from=builder /app/.next/static ./.next/static
 COPY --chown=app:app --from=builder /app/public ./public
 
-EXPOSE 3000
+EXPOSE 5678
 
 # tini reaps zombies from sparkrun child processes (ssh, docker, etc.).
 ENTRYPOINT ["/usr/bin/tini", "--"]

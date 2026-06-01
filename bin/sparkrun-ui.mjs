@@ -16,7 +16,7 @@ Usage:
   npx sparkrun-ui [options]
 
 Options:
-  -p, --port <port>           Port to listen on (default: 3000)
+  -p, --port <port>           Port to listen on (default: 5678)
   -H, --host <host>           Host/interface to bind (default: 0.0.0.0)
       --sparkrun-bin <path>   Path to the sparkrun CLI (default: \`sparkrun\` on PATH)
   -h, --help                  Show this message
@@ -52,7 +52,7 @@ if (values.version) {
   process.exit(0);
 }
 
-const port = values.port ?? process.env.PORT ?? "3000";
+const port = values.port ?? process.env.PORT ?? "5678";
 if (!/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535) {
   process.stderr.write(`sparkrun-ui: invalid --port value: ${port}\n`);
   process.exit(2);
