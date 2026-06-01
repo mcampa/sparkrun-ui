@@ -10,6 +10,7 @@ import { Badge } from "@/app/components/ui/Badge";
 import { Button } from "@/app/components/ui/Button";
 import { WorkloadCard } from "./WorkloadCard";
 import { AggregateStats } from "./AggregateStats";
+import { UpdateSparkrunButton } from "./UpdateSparkrunButton";
 
 export function DashboardLive({
   initial,
@@ -50,6 +51,7 @@ export function DashboardLive({
       <div className="flex items-baseline justify-between">
         <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
         <div className="flex items-center gap-2 text-sm">
+          <UpdateSparkrunButton />
           <Badge tone="sky">
             {status.host_count} host{status.host_count === 1 ? "" : "s"}
           </Badge>
