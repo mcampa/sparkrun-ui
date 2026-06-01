@@ -2,6 +2,11 @@ import { RPCHandler } from "@orpc/server/fetch";
 import { onError } from "@orpc/server";
 import { router } from "@/lib/rpc/router";
 
+// RPC handlers stream live state from the sparkrun CLI — nothing here is
+// cacheable, so opt the route out of any prerender/cache attempts.
+// https://nextjs.org/docs/app/guides/caching-without-cache-components#dynamic
+export const dynamic = "force-dynamic";
+
 const handler = new RPCHandler(router, {
   interceptors: [
     onError((error) => {
