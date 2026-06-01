@@ -12,7 +12,22 @@ import {
 import { yaml } from "@codemirror/lang-yaml";
 import { defaultKeymap, history, historyKeymap, indentWithTab } from "@codemirror/commands";
 import { linter, lintGutter, type Diagnostic } from "@codemirror/lint";
+import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
+import { tags as t } from "@lezer/highlight";
 import type { ValidationIssue } from "@/lib/schemas";
+
+// YAML token colors are driven by CSS variables (defined in globals.css)
+// so the same HighlightStyle reads well on both the light and dark
+// editor backgrounds without needing to swap rules at runtime.
+const yamlHighlight = HighlightStyle.define([
+  { tag: t.propertyName, color: "var(--cm-property)" },
+  { tag: [t.string, t.content], color: "var(--cm-string)" },
+  { tag: t.attributeValue, color: "var(--cm-atom)" },
+  { tag: [t.lineComment, t.comment], color: "var(--cm-comment)", fontStyle: "italic" },
+  { tag: t.keyword, color: "var(--cm-keyword)" },
+  { tag: [t.meta, t.typeName], color: "var(--cm-meta)" },
+  { tag: [t.punctuation, t.separator, t.brace, t.squareBracket], color: "var(--cm-punct)" },
+]);
 
 const baseExtensions = [
   lineNumbers(),
@@ -21,6 +36,7 @@ const baseExtensions = [
   highlightActiveLine(),
   keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),
   yaml(),
+  syntaxHighlighting(yamlHighlight, { fallback: true }),
   lintGutter(),
   EditorView.theme({
     "&": { fontSize: "12px", height: "100%" },
