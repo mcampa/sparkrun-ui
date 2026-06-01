@@ -1,9 +1,29 @@
-import { spawn, type ChildProcessByStdio } from "node:child_process";
+import type { ChildProcessByStdio, spawn as nodeSpawn } from "node:child_process";
+import { createRequire } from "node:module";
 import type { Readable } from "node:stream";
 import { createInterface } from "node:readline";
 import { ORPCError } from "@orpc/server";
 
-export const SPARKRUN_BIN = process.env.SPARKRUN_BIN || "sparkrun";
+// Build the spawn caller via Function constructor so Turbopack's NFT trace
+// can't see the child_process.spawn invocation — otherwise any non-literal
+// first argument (e.g. `process.env.SPARKRUN_BIN || "sparkrun"`) makes NFT
+// fall back to whole-project tracing and bundles tests/, docs/,
+// next.config.ts, etc. into `.next/standalone`. `cp` is typed as `unknown` so
+// the static analyzer doesn't see a `.spawn` method on it either.
+const cp: unknown = createRequire(import.meta.url)("node:child_process");
+const spawnViaCp = new Function(
+  "cp",
+  "bin",
+  "args",
+  "opts",
+  "return cp.spawn(bin, args, opts);",
+) as (cp: unknown, ...rest: Parameters<typeof nodeSpawn>) => ReturnType<typeof nodeSpawn>;
+const runChild: typeof nodeSpawn = ((...args: Parameters<typeof nodeSpawn>) =>
+  spawnViaCp(cp, ...args)) as typeof nodeSpawn;
+
+export function getSparkrunBin(): string {
+  return process.env.SPARKRUN_BIN || "sparkrun";
+}
 
 export type SparkrunTarget = {
   cluster?: string;
@@ -30,7 +50,7 @@ export type SparkrunResult = {
 
 export function runSparkrun(args: string[], opts: RunOpts = {}): Promise<SparkrunResult> {
   return new Promise((resolve, reject) => {
-    const child = spawn(SPARKRUN_BIN, args, { stdio: ["ignore", "pipe", "pipe"] });
+    const child = runChild(getSparkrunBin(), args, { stdio: ["ignore", "pipe", "pipe"] });
     const stdoutChunks: Buffer[] = [];
     const stderrChunks: Buffer[] = [];
 
@@ -84,7 +104,7 @@ export async function runSparkrunText(args: string[], opts: RunOpts = {}): Promi
 export type SparkrunChild = ChildProcessByStdio<null, Readable, Readable>;
 
 export function spawnSparkrun(args: string[]): SparkrunChild {
-  return spawn(SPARKRUN_BIN, args, { stdio: ["ignore", "pipe", "pipe"] });
+  return runChild(getSparkrunBin(), args, { stdio: ["ignore", "pipe", "pipe"] });
 }
 
 export async function* streamSparkrunLines(
@@ -175,7 +195,7 @@ export async function* streamSparkrunNdjson<T>(
 }
 
 export function fireAndForgetSparkrun(args: string[]): void {
-  const child = spawn(SPARKRUN_BIN, args, {
+  const child = runChild(getSparkrunBin(), args, {
     stdio: "ignore",
     detached: true,
   });
