@@ -32,9 +32,19 @@ RUN apt-get update \
        openssh-client \
        git \
        gnupg \
+       gosu \
        tini \
   && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
   && apt-get install --no-install-recommends -y nodejs \
+  # Docker CLI is needed because sparkrun runs `docker` locally for any
+  # cluster host that resolves to 127.0.0.1. The daemon stays on the host;
+  # the container talks to it via a bind-mounted /var/run/docker.sock.
+  && install -m 0755 -d /etc/apt/keyrings \
+  && curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc \
+  && chmod a+r /etc/apt/keyrings/docker.asc \
+  && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian bookworm stable" > /etc/apt/sources.list.d/docker.list \
+  && apt-get update \
+  && apt-get install --no-install-recommends -y docker-ce-cli \
   && apt-get purge -y --auto-remove gnupg curl \
   && rm -rf /var/lib/apt/lists/*
 
@@ -51,7 +61,8 @@ ARG APP_GID=1000
 RUN groupadd --system --gid ${APP_GID} app \
   && useradd --system --uid ${APP_UID} --gid app --create-home --home-dir /home/app --shell /bin/bash app
 
-USER app
+# Start as root so the entrypoint can sync the docker-socket group, then drop
+# to `app` via gosu. The app process itself never runs as root.
 WORKDIR /home/app/app
 ENV HOME=/home/app \
     NODE_ENV=production \
@@ -65,8 +76,11 @@ COPY --chown=app:app --from=builder /app/.next/standalone ./
 COPY --chown=app:app --from=builder /app/.next/static ./.next/static
 COPY --chown=app:app --from=builder /app/public ./public
 
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 EXPOSE 5678
 
 # tini reaps zombies from sparkrun child processes (ssh, docker, etc.).
-ENTRYPOINT ["/usr/bin/tini", "--"]
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/entrypoint.sh"]
 CMD ["node", "server.js"]

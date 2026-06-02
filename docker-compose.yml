@@ -40,6 +40,15 @@ services:
       # interpolates from the host environment).
       - ${HOME}/.local/share/uv/tools/sparkrun:${HOME}/.local/share/uv/tools/sparkrun:ro
 
+      # --- host docker access ---
+      # sparkrun runs `docker` locally (not via SSH) for any cluster host that
+      # resolves to 127.0.0.1, so the UI container needs access to the host's
+      # docker daemon. The entrypoint syncs the in-container group to the
+      # socket's host GID at start, so this works regardless of the host's
+      # docker GID. Required for single-host (127.0.0.1) clusters; harmless
+      # otherwise.
+      - /var/run/docker.sock:/var/run/docker.sock
+
       # --- sparkrun state, shared with the host CLI ---
       # SSH keys that sparkrun uses to reach cluster hosts. Read-only.
       - ${HOME}/.ssh:/home/app/.ssh:ro
