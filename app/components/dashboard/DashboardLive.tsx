@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Rocket } from "lucide-react";
+import { AlertTriangle, Rocket } from "lucide-react";
 import { rpc } from "@/lib/rpc/client";
 import type { ClusterStatus } from "@/lib/schemas";
 import type { RunningRecipeDisplay } from "@/lib/runningRecipes";
@@ -10,6 +10,14 @@ import { Badge } from "@/app/components/ui/Badge";
 import { Button } from "@/app/components/ui/Button";
 import { WorkloadCard } from "./WorkloadCard";
 import { AggregateStats } from "./AggregateStats";
+
+function formatHostError(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (value && typeof value === "object" && "message" in value) {
+    return String((value as { message: unknown }).message);
+  }
+  return JSON.stringify(value);
+}
 
 export function DashboardLive({
   initial,
@@ -61,6 +69,29 @@ export function DashboardLive({
       </div>
 
       <AggregateStats />
+
+      {Object.keys(status.errors).length > 0 && (
+        <Card className="border-amber-300 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/40">
+          <CardBody className="flex gap-3">
+            <AlertTriangle
+              className="mt-0.5 shrink-0 text-amber-600 dark:text-amber-400"
+              size={18}
+            />
+            <div className="flex flex-col gap-1 text-sm">
+              <h3 className="font-medium text-amber-900 dark:text-amber-200">
+                Cluster status reported errors
+              </h3>
+              <ul className="flex flex-col gap-1 text-amber-800 dark:text-amber-300">
+                {Object.entries(status.errors).map(([host, err]) => (
+                  <li key={host} className="font-mono text-xs">
+                    <span className="font-semibold">{host}:</span> {formatHostError(err)}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </CardBody>
+        </Card>
+      )}
 
       <div className="flex flex-col gap-3">
         <h2 className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Workloads</h2>
