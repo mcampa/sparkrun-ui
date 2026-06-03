@@ -19,4 +19,16 @@ if [ -S /var/run/docker.sock ]; then
   fi
 fi
 
+# Ensure sparkrun knows the host user for SSH.  sparkrun always uses SSH
+# for cluster monitoring (even for 127.0.0.1), so the container's default
+# OS user (app) won't authenticate against the host unless we configure
+# the real host user in sparkrun's config.
+if [ -n "${HOST_USER}" ] && [ "${HOST_USER}" != "app" ]; then
+  SPARKRUN_CONFIG="$HOME/.config/sparkrun/config.yaml"
+  if [ ! -f "$SPARKRUN_CONFIG" ]; then
+    mkdir -p "$(dirname "$SPARKRUN_CONFIG")"
+    printf 'ssh:\n  user: %s\n' "$HOST_USER" > "$SPARKRUN_CONFIG"
+  fi
+fi
+
 exec gosu app "$@"
