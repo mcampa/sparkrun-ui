@@ -29,6 +29,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=5678
+      - HOST_USER=${USER}
 
     volumes:
       # --- bind-mounted sparkrun from the host ---
