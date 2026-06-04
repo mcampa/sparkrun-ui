@@ -52,7 +52,7 @@ bundle so there is no build step on the user's machine.
 
 ## Run with Docker
 
-A multi-arch image (`linux/amd64` + `linux/arm64`) is published to
+An `linux/arm64` image is published to
 [`ghcr.io/mcampa/sparkrun-ui`](https://github.com/mcampa/sparkrun-ui/pkgs/container/sparkrun-ui)
 on every push to `main`.
 
