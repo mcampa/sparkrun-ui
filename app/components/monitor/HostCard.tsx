@@ -103,10 +103,10 @@ export function HostCard({
 }
 
 const toneColors = {
-  sky: "fill-sky-500 dark:fill-sky-400",
-  purple: "fill-purple-500 dark:fill-purple-400",
-  green: "fill-emerald-500 dark:fill-emerald-400",
-  amber: "fill-amber-500 dark:fill-amber-400",
+  sky: "text-sky-500 dark:text-sky-400",
+  purple: "text-purple-500 dark:text-purple-400",
+  green: "text-emerald-500 dark:text-emerald-400",
+  amber: "text-amber-500 dark:text-amber-400",
 };
 
 function Meter({
@@ -165,12 +165,17 @@ function Sparkline({ values, className }: { values: number[]; className: string 
   const h = 16;
   const max = Math.max(100, ...values);
   const step = w / Math.max(1, values.length - 1);
-  const path = values
-    .map((v, i) => `${i === 0 ? "M" : "L"} ${i * step} ${h - (v / max) * h}`)
-    .join(" ");
+  const points = values.map((v, i) => `${i * step},${h - (v / max) * h}`);
+  const lastX = (values.length - 1) * step;
+  // Area path properly closed along the baseline. Without the explicit
+  // `L lastX,h L 0,h Z` SVG implicitly closes back to the first point,
+  // producing a diagonal slash through the chart.
+  const areaPath = `M 0,${h} L ${points.join(" L ")} L ${lastX},${h} Z`;
+  const linePath = `M ${points.join(" L ")}`;
   return (
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="flex-shrink-0">
-      <path d={path} className={className} fill="none" stroke="currentColor" strokeWidth={1} />
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className={`flex-shrink-0 ${className}`}>
+      <path d={areaPath} fill="currentColor" stroke="none" opacity={0.35} />
+      <path d={linePath} fill="none" stroke="currentColor" strokeWidth={1} />
     </svg>
   );
 }
