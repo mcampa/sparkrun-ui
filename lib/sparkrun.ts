@@ -249,9 +249,11 @@ export function startBenchmark(args: string[], timeoutMs = 30_000): Promise<{ id
       reject(
         new Error(
           `sparkrun did not emit a benchmark id within ${Math.round(timeoutMs / 1000)}s` +
-            (tail ? `
+            (tail
+              ? `
 Last output:
-${tail}` : ""),
+${tail}`
+              : ""),
         ),
       );
     }, timeoutMs);
@@ -321,9 +323,11 @@ ${tail}` : ""),
         reject(
           new Error(
             `sparkrun exited with code ${code ?? -1} before emitting a benchmark id` +
-              (tail ? `
+              (tail
+                ? `
 Last output:
-${tail}` : ""),
+${tail}`
+                : ""),
           ),
         );
         return;
