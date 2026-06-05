@@ -10,7 +10,7 @@ import { rpc } from "@/lib/rpc/client";
 import { RecipeShowDialog } from "@/app/components/recipes/RecipeShowDialog";
 import { useWorkloadHealth } from "@/app/components/useWorkloadHealth";
 import type { Workload } from "@/lib/schemas";
-import { extractServedModelName, type RunningRecipeDisplay } from "@/lib/runningRecipes";
+import type { RunningRecipeDisplay } from "@/lib/runningRecipes";
 import { parseWorkloadUptime } from "@/lib/workloadStatus";
 
 export function WorkloadCard({
@@ -158,6 +158,21 @@ export function WorkloadCard({
       )}
     </>
   );
+}
+
+function extractServedModelName(meta: Workload["meta"]): string | undefined {
+  const overrides = meta?.overrides as Record<string, unknown> | undefined;
+  const ov = overrides?.served_model_name;
+  if (typeof ov === "string" && ov) return ov;
+  const recipeState = meta?.recipe_state as Record<string, unknown> | undefined;
+  const applied = recipeState?._applied_overrides as Record<string, unknown> | undefined;
+  const ap = applied?.served_model_name;
+  if (typeof ap === "string" && ap) return ap;
+  const raw = recipeState?._raw as Record<string, unknown> | undefined;
+  const defaults = raw?.defaults as Record<string, unknown> | undefined;
+  const def = defaults?.served_model_name;
+  if (typeof def === "string" && def) return def;
+  return undefined;
 }
 
 function buildBenchmarkHref(

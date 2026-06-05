@@ -14,29 +14,6 @@ export function getRecipeStateRawName(recipeState: unknown): string | undefined 
   return typeof rawName === "string" ? rawName : undefined;
 }
 
-/**
- * Extract the served_model_name a running workload exposes to API clients.
- * Looks at applied overrides first, then recipe defaults — matches the order
- * vLLM resolves the value in.
- */
-export function extractServedModelName(meta: Workload["meta"]): string | undefined {
-  const overrides = meta?.overrides as Record<string, unknown> | undefined;
-  const ov = overrides?.served_model_name;
-  if (typeof ov === "string" && ov) return ov;
-
-  const recipeState = meta?.recipe_state as Record<string, unknown> | undefined;
-  const applied = recipeState?._applied_overrides as Record<string, unknown> | undefined;
-  const ap = applied?.served_model_name;
-  if (typeof ap === "string" && ap) return ap;
-
-  const raw = recipeState?._raw as Record<string, unknown> | undefined;
-  const defaults = raw?.defaults as Record<string, unknown> | undefined;
-  const def = defaults?.served_model_name;
-  if (typeof def === "string" && def) return def;
-
-  return undefined;
-}
-
 export function extractDraftId(recipePath: string): string | null {
   return recipePath.match(DRAFT_RECIPE_PATH_RE)?.[1] ?? null;
 }
