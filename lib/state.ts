@@ -179,10 +179,13 @@ export function deriveStatus(state: BenchmarkState): BenchmarkSummary["status"] 
   const last = state.sessions?.[state.sessions.length - 1];
   if (!last) return "unknown";
   if (last.status === "completed") return "completed";
+  if (last.status === "running") return "running";
   if (last.status === "partial") {
     if (!last.ended_at) return "running";
     return state.failed_indices?.length ? "failed" : "partial";
   }
   if (last.status === "failed") return "failed";
+  // Any unrecognized status without an ended_at is still in-flight.
+  if (!last.ended_at) return "running";
   return "unknown";
 }
