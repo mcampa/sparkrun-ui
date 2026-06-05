@@ -59,7 +59,7 @@ export function BenchmarkDetail({
   const [consolidated, setConsolidated] = useState<Consolidated | null>(initialConsolidated);
   const [logLines, setLogLines] = useState<string[]>([]);
   const [streamDone, setStreamDone] = useState(false);
-  const [logOpen, setLogOpen] = useState(false);
+  const [logOpen, setLogOpen] = useState(true);
   const logBottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
