@@ -71,7 +71,7 @@ export function NewBenchmarkForm({
         .split(",")
         .map((s) => parseInt(s.trim(), 10))
         .filter((n) => Number.isFinite(n) && n > 0);
-      await rpc.benchmarks.run({
+      const { id } = await rpc.benchmarks.run({
         recipe,
         cluster: cluster || undefined,
         profile: profile || undefined,
@@ -79,7 +79,7 @@ export function NewBenchmarkForm({
         skipRun,
       });
       toast.success("Benchmark started", `${recipe} on ${cluster || "default"}`);
-      router.push("/benchmarks");
+      router.push(`/benchmarks/${id}`);
     } catch (err) {
       toast.error("Benchmark failed to start", err instanceof Error ? err.message : String(err));
       setSubmitting(false);

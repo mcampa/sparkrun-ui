@@ -201,3 +201,132 @@ export function fireAndForgetSparkrun(args: string[]): void {
   });
   child.unref();
 }
+
+const BENCH_ID_RE = /^Benchmark ID:\s+(\S+)/;
+const BENCH_LOG_CAP = 500;
+const BENCH_GC_MS = 60_000;
+
+type BenchmarkLogListener = (line: string) => void;
+type BenchmarkProc = {
+  child: SparkrunChild;
+  buffer: string[];
+  listeners: Set<BenchmarkLogListener>;
+  done: boolean;
+  exitCode: number | null;
+  exitError: string | null;
+};
+
+const benchmarkProcs = new Map<string, BenchmarkProc>();
+
+export function getBenchmarkProc(id: string): BenchmarkProc | null {
+  return benchmarkProcs.get(id) ?? null;
+}
+
+export function subscribeBenchmarkLog(id: string, cb: BenchmarkLogListener): () => void {
+  const proc = benchmarkProcs.get(id);
+  if (!proc) return () => {};
+  proc.listeners.add(cb);
+  return () => {
+    proc.listeners.delete(cb);
+  };
+}
+
+export function startBenchmark(args: string[], timeoutMs = 30_000): Promise<{ id: string }> {
+  return new Promise((resolve, reject) => {
+    const child = spawnSparkrun(args);
+
+    let settled = false;
+    let id: string | null = null;
+    const pending: string[] = [];
+
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      try {
+        child.kill("SIGTERM");
+      } catch {}
+      reject(
+        new Error(`sparkrun did not emit a benchmark id within ${Math.round(timeoutMs / 1000)}s`),
+      );
+    }, timeoutMs);
+
+    const attach = (capturedId: string) => {
+      const proc: BenchmarkProc = {
+        child,
+        buffer: pending.slice(-BENCH_LOG_CAP),
+        listeners: new Set(),
+        done: false,
+        exitCode: null,
+        exitError: null,
+      };
+      benchmarkProcs.set(capturedId, proc);
+    };
+
+    const pushLine = (line: string) => {
+      if (id) {
+        const proc = benchmarkProcs.get(id);
+        if (!proc) return;
+        proc.buffer.push(line);
+        if (proc.buffer.length > BENCH_LOG_CAP) proc.buffer.shift();
+        for (const l of proc.listeners) {
+          try {
+            l(line);
+          } catch {}
+        }
+        return;
+      }
+      pending.push(line);
+      if (pending.length > BENCH_LOG_CAP) pending.shift();
+      const m = line.match(BENCH_ID_RE);
+      if (m) {
+        id = m[1];
+        attach(id);
+        if (!settled) {
+          settled = true;
+          clearTimeout(timer);
+          resolve({ id });
+        }
+      }
+    };
+
+    const stdoutRl = createInterface({ input: child.stdout });
+    stdoutRl.on("line", pushLine);
+    const stderrRl = createInterface({ input: child.stderr });
+    stderrRl.on("line", pushLine);
+
+    child.on("error", (err) => {
+      if (!settled) {
+        settled = true;
+        clearTimeout(timer);
+        reject(err);
+        return;
+      }
+      if (id) {
+        const proc = benchmarkProcs.get(id);
+        if (proc) proc.exitError = err.message;
+      }
+    });
+
+    child.on("close", (code) => {
+      if (!settled) {
+        settled = true;
+        clearTimeout(timer);
+        reject(new Error(`sparkrun exited with code ${code ?? -1} before emitting a benchmark id`));
+        return;
+      }
+      if (!id) return;
+      const proc = benchmarkProcs.get(id);
+      if (!proc) return;
+      proc.done = true;
+      proc.exitCode = code;
+      for (const l of proc.listeners) {
+        try {
+          l(`[exit ${code ?? -1}]`);
+        } catch {}
+      }
+      setTimeout(() => {
+        benchmarkProcs.delete(id!);
+      }, BENCH_GC_MS);
+    });
+  });
+}

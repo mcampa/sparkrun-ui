@@ -1,7 +1,19 @@
-import { os, ORPCError } from "@orpc/server";
+import { os, ORPCError, eventIterator } from "@orpc/server";
 import { z } from "zod";
-import { runSparkrun, fireAndForgetSparkrun } from "@/lib/sparkrun";
-import { listBenchmarks, getBenchmark } from "@/lib/state";
+import {
+  runSparkrun,
+  startBenchmark,
+  getBenchmarkProc,
+  subscribeBenchmarkLog,
+} from "@/lib/sparkrun";
+import {
+  listBenchmarks,
+  getBenchmark,
+  watchBenchmarkFiles,
+  deriveStatus,
+  isTerminalStatus,
+  type BenchmarkState,
+} from "@/lib/state";
 
 const SummarySchema = z.object({
   id: z.string(),
@@ -64,7 +76,7 @@ export const run = os
       concurrency: z.array(z.number().int().positive()).optional(),
     }),
   )
-  .output(z.object({ ok: z.literal(true) }))
+  .output(z.object({ id: z.string() }))
   .handler(async ({ input }) => {
     const args = ["benchmark", "run", input.recipe];
     if (input.cluster) args.push("--cluster", input.cluster);
@@ -81,6 +93,135 @@ export const run = os
         message: "Must specify at least cluster, hosts, or profile",
       });
     }
-    fireAndForgetSparkrun(args);
-    return { ok: true as const };
+    try {
+      const { id } = await startBenchmark(args);
+      return { id };
+    } catch (err) {
+      throw new ORPCError("INTERNAL_SERVER_ERROR", {
+        message: err instanceof Error ? err.message : "Failed to start benchmark",
+      });
+    }
+  });
+
+const WatchEventSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("log"), line: z.string() }),
+  z.object({ type: z.literal("state"), state: z.unknown() }),
+  z.object({ type: z.literal("metrics"), consolidated: z.unknown().nullable() }),
+  z.object({ type: z.literal("done"), ok: z.boolean() }),
+  z.object({ type: z.literal("error"), error: z.string() }),
+]);
+
+type WatchEvent = z.infer<typeof WatchEventSchema>;
+
+export const watch = os
+  .input(z.object({ id: z.string() }))
+  .output(eventIterator(WatchEventSchema))
+  .handler(async function* ({ input, signal }) {
+    const { id } = input;
+
+    const initial = await getBenchmark(id);
+    let latestState: BenchmarkState | null = initial?.state ?? null;
+    if (initial) {
+      yield { type: "state", state: initial.state } satisfies WatchEvent;
+      yield {
+        type: "metrics",
+        consolidated: initial.consolidated,
+      } satisfies WatchEvent;
+
+      if (!getBenchmarkProc(id) && isTerminalStatus(deriveStatus(initial.state))) {
+        yield {
+          type: "done",
+          ok: deriveStatus(initial.state) === "completed",
+        } satisfies WatchEvent;
+        return;
+      }
+    }
+
+    const queue: WatchEvent[] = [];
+    let resolveNext: (() => void) | null = null;
+    const wake = () => {
+      const r = resolveNext;
+      resolveNext = null;
+      r?.();
+    };
+
+    const proc = getBenchmarkProc(id);
+    let unsubscribe: (() => void) | null = null;
+    if (proc) {
+      for (const line of proc.buffer) {
+        queue.push({ type: "log", line });
+      }
+      unsubscribe = subscribeBenchmarkLog(id, (line) => {
+        queue.push({ type: "log", line });
+        wake();
+      });
+    }
+
+    const fileAc = new AbortController();
+    const onAbort = () => {
+      fileAc.abort();
+      wake();
+    };
+    signal?.addEventListener("abort", onAbort, { once: true });
+
+    let watcherDone = false;
+    (async () => {
+      try {
+        for await (const ev of watchBenchmarkFiles(id, { signal: fileAc.signal })) {
+          if (ev.state) {
+            latestState = ev.state;
+            queue.push({ type: "state", state: ev.state });
+          }
+          if (ev.consolidated !== undefined) {
+            queue.push({ type: "metrics", consolidated: ev.consolidated });
+          }
+          wake();
+        }
+      } catch {
+        // swallow — watcher errors are non-fatal
+      } finally {
+        watcherDone = true;
+        wake();
+      }
+    })();
+
+    try {
+      while (!signal?.aborted) {
+        if (queue.length) {
+          const ev = queue.shift()!;
+          yield ev;
+          if (ev.type === "state") {
+            const status = deriveStatus(ev.state as BenchmarkState);
+            const live = getBenchmarkProc(id);
+            if (isTerminalStatus(status) && (!live || live.done)) {
+              yield {
+                type: "done",
+                ok: status === "completed",
+              } satisfies WatchEvent;
+              return;
+            }
+          }
+          continue;
+        }
+        if (watcherDone && !getBenchmarkProc(id)) {
+          if (latestState) {
+            const status = deriveStatus(latestState);
+            yield {
+              type: "done",
+              ok: status === "completed",
+            } satisfies WatchEvent;
+          } else {
+            yield { type: "done", ok: false } satisfies WatchEvent;
+          }
+          return;
+        }
+        await new Promise<void>((r) => {
+          resolveNext = r;
+        });
+      }
+    } finally {
+      signal?.removeEventListener("abort", onAbort);
+      fileAc.abort();
+      unsubscribe?.();
+    }
   });
