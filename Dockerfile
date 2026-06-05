@@ -45,6 +45,8 @@ RUN apt-get update \
   && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian bookworm stable" > /etc/apt/sources.list.d/docker.list \
   && apt-get update \
   && apt-get install --no-install-recommends -y docker-ce-cli \
+  # uv is needed by sparkrun for self-upgrade and running tools via uvx.
+  && curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=/usr/local/bin sh \
   && apt-get purge -y --auto-remove gnupg curl \
   && rm -rf /var/lib/apt/lists/*
 
