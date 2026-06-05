@@ -67,6 +67,7 @@ export function NewBenchmarkForm({
   const modelParam = searchParams.get("model");
   const clusterParam = searchParams.get("cluster");
   const skipRunParam = searchParams.get("skipRun");
+  const servedModelNameParam = searchParams.get("servedModelName");
   const skipRunLocked = skipRunParam === "1" || skipRunParam === "true";
   const initialRecipe =
     matchRecipeParam(recipeParam, modelParam, recipes, running) ?? firstRunning(recipes, running);
@@ -118,6 +119,7 @@ export function NewBenchmarkForm({
         profile: profile || undefined,
         concurrency: concList.length ? concList : undefined,
         skipRun,
+        servedModelName: servedModelNameParam || undefined,
       });
       toast.success("Benchmark started", `${recipe} on ${cluster || "default"}`);
       router.push(`/benchmarks/${id}`);

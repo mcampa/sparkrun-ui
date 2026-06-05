@@ -10,7 +10,7 @@ import { rpc } from "@/lib/rpc/client";
 import { RecipeShowDialog } from "@/app/components/recipes/RecipeShowDialog";
 import { useWorkloadHealth } from "@/app/components/useWorkloadHealth";
 import type { Workload } from "@/lib/schemas";
-import type { RunningRecipeDisplay } from "@/lib/runningRecipes";
+import { extractServedModelName, type RunningRecipeDisplay } from "@/lib/runningRecipes";
 import { parseWorkloadUptime } from "@/lib/workloadStatus";
 
 export function WorkloadCard({
@@ -107,7 +107,13 @@ export function WorkloadCard({
                 Logs
               </Button>
             </Link>
-            <Link href={buildBenchmarkHref(recipe, workload.meta.model)}>
+            <Link
+              href={buildBenchmarkHref(
+                recipe,
+                workload.meta.model,
+                extractServedModelName(workload.meta),
+              )}
+            >
               <Button variant="ghost" size="sm">
                 <Gauge size={14} />
                 Benchmark
@@ -157,11 +163,13 @@ export function WorkloadCard({
 function buildBenchmarkHref(
   recipe: RunningRecipeDisplay | undefined,
   model: string | undefined,
+  servedModelName: string | undefined,
 ): string {
   const name = recipe?.registeredName ?? recipe?.label;
   const params = new URLSearchParams();
   if (name) params.set("recipe", name);
   if (model) params.set("model", model);
+  if (servedModelName) params.set("servedModelName", servedModelName);
   params.set("skipRun", "1");
   return `/benchmarks/new?${params.toString()}`;
 }

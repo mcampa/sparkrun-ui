@@ -74,6 +74,7 @@ export const run = os
       framework: z.string().optional(),
       skipRun: z.boolean().default(false),
       concurrency: z.array(z.number().int().positive()).optional(),
+      servedModelName: z.string().optional(),
     }),
   )
   .output(z.object({ id: z.string() }))
@@ -87,6 +88,12 @@ export const run = os
     if (input.skipRun) args.push("--skip-run");
     if (input.concurrency?.length) {
       args.push("-b", `concurrency=${input.concurrency.join(",")}`);
+    }
+    if (input.servedModelName) {
+      // Force the API model identifier llama-benchy sends in requests. Recipes
+      // can rename the served model via --served-model-name, which makes the
+      // recipe's `model:` field (the HF id) a 404 against the live endpoint.
+      args.push("-b", `served_model_name=${input.servedModelName}`);
     }
     // Always start fresh: sparkrun otherwise prompts "Resume? [Y/n]" when
     // it finds incomplete state from a prior failed run, which hangs the
