@@ -23,26 +23,39 @@ const LATENCY_METRICS = [
   { key: "est_ppt", label: "Est PPT", color: "#ef4444" },
 ] as const;
 
-type MetricKey =
-  | (typeof THROUGHPUT_METRICS)[number]["key"]
-  | (typeof LATENCY_METRICS)[number]["key"];
+type MetricDef = { key: string; label: string; color: string };
 
-type ChartPoint = { concurrency: number } & Partial<Record<MetricKey | `${MetricKey}_std`, number>>;
+type ChartPoint = { concurrency: number } & Partial<Record<string, number>>;
 
-function buildPoints(rows: ConsolidatedRow[]): ChartPoint[] {
-  return [...rows]
+function buildDepthChart(rows: ConsolidatedRow[], depth: number): ChartPoint[] {
+  return rows
+    .filter(
+      (r) => r.context_size === depth && !(r as Record<string, unknown>).is_context_prefill_phase,
+    )
     .sort((a, b) => a.concurrency - b.concurrency)
     .map((r) => {
       const p: ChartPoint = { concurrency: r.concurrency };
       for (const { key } of [...THROUGHPUT_METRICS, ...LATENCY_METRICS]) {
-        const m = r[key];
-        if (m) {
+        const m = r[key as keyof ConsolidatedRow];
+        if (m && typeof m === "object" && "mean" in m) {
           p[key] = m.mean;
-          p[`${key}_std`] = m.std;
+          p[`${key}_std`] = (m as { std: number }).std;
         }
       }
       return p;
     });
+}
+
+function collectDepths(rows: ConsolidatedRow[]): number[] {
+  const set = new Set<number>();
+  for (const r of rows) set.add(r.context_size);
+  return [...set].sort((a, b) => a - b);
+}
+
+function formatContextSize(d: number): string {
+  if (d === 0) return "No context";
+  if (d >= 1024) return `${d / 1024}k`;
+  return String(d);
 }
 
 export function BenchmarkCharts({ consolidated }: { consolidated: Consolidated | null }) {
@@ -50,17 +63,39 @@ export function BenchmarkCharts({ consolidated }: { consolidated: Consolidated |
     return <p className="text-sm text-zinc-500 dark:text-zinc-400">No consolidated metrics yet.</p>;
   }
 
-  const points = buildPoints(consolidated.benchmarks);
+  const depths = collectDepths(consolidated.benchmarks);
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <ChartCard title="Throughput vs concurrency" unit="tok/s">
-          <MetricsChart points={points} metrics={THROUGHPUT_METRICS} />
-        </ChartCard>
-        <ChartCard title="Latency vs concurrency" unit="ms">
-          <MetricsChart points={points} metrics={LATENCY_METRICS} />
-        </ChartCard>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {depths.map((depth) => {
+          const points = buildDepthChart(consolidated.benchmarks, depth);
+          if (!points.length) return null;
+          return (
+            <ChartCard
+              key={depth}
+              title={`Throughput (depth ${formatContextSize(depth)})`}
+              unit="tok/s"
+            >
+              <MetricsChart points={points} metrics={THROUGHPUT_METRICS} />
+            </ChartCard>
+          );
+        })}
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {depths.map((depth) => {
+          const points = buildDepthChart(consolidated.benchmarks, depth);
+          if (!points.length) return null;
+          return (
+            <ChartCard
+              key={`lat-${depth}`}
+              title={`Latency (depth ${formatContextSize(depth)})`}
+              unit="ms"
+            >
+              <MetricsChart points={points} metrics={LATENCY_METRICS} />
+            </ChartCard>
+          );
+        })}
       </div>
       <SummaryTable rows={consolidated.benchmarks} />
     </div>
@@ -82,7 +117,7 @@ function ChartCard({
         <span className="text-sm font-medium">{title}</span>
         <span className="text-xs text-zinc-500 dark:text-zinc-400">{unit}</span>
       </div>
-      <div className="h-72 w-full">{children}</div>
+      <div className="h-56 w-full">{children}</div>
     </div>
   );
 }
@@ -92,8 +127,9 @@ function MetricsChart({
   metrics,
 }: {
   points: ChartPoint[];
-  metrics: readonly { key: MetricKey; label: string; color: string }[];
+  metrics: readonly MetricDef[];
 }) {
+  if (!points.length) return null;
   return (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart data={points} margin={{ top: 8, right: 16, bottom: 4, left: 8 }}>
@@ -102,21 +138,21 @@ function MetricsChart({
           dataKey="concurrency"
           type="number"
           domain={["dataMin", "dataMax"]}
-          tick={{ fontSize: 11 }}
+          tick={{ fontSize: 10 }}
           className="fill-zinc-500 dark:fill-zinc-400"
-          label={{ value: "concurrency", position: "insideBottom", offset: -2, fontSize: 11 }}
+          label={{ value: "concurrency", position: "insideBottom", offset: -2, fontSize: 10 }}
         />
-        <YAxis tick={{ fontSize: 11 }} className="fill-zinc-500 dark:fill-zinc-400" />
+        <YAxis tick={{ fontSize: 10 }} className="fill-zinc-500 dark:fill-zinc-400" />
         <Tooltip
           contentStyle={{
-            fontSize: 12,
+            fontSize: 11,
             background: "var(--tooltip-bg, white)",
             border: "1px solid #e4e4e7",
             borderRadius: 6,
           }}
           formatter={(value) => (typeof value === "number" ? value.toFixed(2) : String(value))}
         />
-        <Legend wrapperStyle={{ fontSize: 11 }} />
+        <Legend wrapperStyle={{ fontSize: 10 }} />
         {metrics.map((m) => (
           <Line
             key={m.key}
@@ -124,11 +160,11 @@ function MetricsChart({
             dataKey={m.key}
             name={m.label}
             stroke={m.color}
-            strokeWidth={2}
-            dot={{ r: 3 }}
+            strokeWidth={1.5}
+            dot={{ r: 2 }}
             isAnimationActive={false}
           >
-            <ErrorBar dataKey={`${m.key}_std`} stroke={m.color} strokeOpacity={0.5} width={6} />
+            <ErrorBar dataKey={`${m.key}_std`} stroke={m.color} strokeOpacity={0.5} width={4} />
           </Line>
         ))}
       </LineChart>
@@ -154,12 +190,15 @@ function MetricCell({ mean, std }: { mean?: number; std?: number }) {
 }
 
 function SummaryTable({ rows }: { rows: ConsolidatedRow[] }) {
-  const sorted = [...rows].sort((a, b) => a.concurrency - b.concurrency);
+  const sorted = [...rows].sort(
+    (a, b) => a.context_size - b.context_size || a.concurrency - b.concurrency,
+  );
   return (
     <div className="overflow-x-auto rounded-md border border-zinc-200 dark:border-zinc-800">
       <table className="w-full text-xs">
         <thead className="bg-zinc-50 dark:bg-zinc-900">
           <tr className="text-left">
+            <th className="px-3 py-2 font-medium">depth</th>
             <th className="px-3 py-2 font-medium">concurrency</th>
             <th className="px-3 py-2 font-medium">prompt/response</th>
             <th className="px-3 py-2 font-medium">TG (tok/s)</th>
@@ -170,8 +209,12 @@ function SummaryTable({ rows }: { rows: ConsolidatedRow[] }) {
           </tr>
         </thead>
         <tbody>
-          {sorted.map((r) => (
-            <tr key={r.concurrency} className="border-t border-zinc-200 dark:border-zinc-800">
+          {sorted.map((r, i) => (
+            <tr
+              key={`${r.context_size}-${r.concurrency}-${i}`}
+              className="border-t border-zinc-200 dark:border-zinc-800"
+            >
+              <td className="px-3 py-2 font-mono">{formatContextSize(r.context_size)}</td>
               <td className="px-3 py-2 font-mono">{r.concurrency}</td>
               <td className="px-3 py-2 font-mono text-zinc-500 dark:text-zinc-400">
                 {r.prompt_size}/{r.response_size}
