@@ -9,7 +9,9 @@ import {
 import {
   listBenchmarks,
   getBenchmark,
+  readBenchmarkLogs,
   watchBenchmarkFiles,
+  watchBenchmarkLogs,
   deriveStatus,
   isTerminalStatus,
   type BenchmarkState,
@@ -151,6 +153,14 @@ export const watch = os
         consolidated: initial.consolidated,
       } satisfies WatchEvent;
 
+      // Replay logs from disk for benchmarks not tracked in-memory.
+      if (!getBenchmarkProc(id)) {
+        const { lines } = await readBenchmarkLogs(id);
+        for (const line of lines) {
+          yield { type: "log", line } satisfies WatchEvent;
+        }
+      }
+
       if (!getBenchmarkProc(id) && isTerminalStatus(deriveStatus(initial.state))) {
         yield {
           type: "done",
@@ -207,6 +217,20 @@ export const watch = os
         wake();
       }
     })();
+
+    // Disk-based log polling for benchmarks not tracked in-memory.
+    if (!proc) {
+      (async () => {
+        try {
+          for await (const line of watchBenchmarkLogs(id, { signal: fileAc.signal })) {
+            queue.push({ type: "log", line });
+            wake();
+          }
+        } catch {
+          // swallow
+        }
+      })();
+    }
 
     try {
       while (!signal?.aborted) {

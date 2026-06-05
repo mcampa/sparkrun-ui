@@ -1,4 +1,5 @@
-import { readFile, readdir, stat } from "node:fs/promises";
+import { open, readFile, readdir, stat } from "node:fs/promises";
+import { createInterface } from "node:readline";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { parse as parseYaml } from "yaml";
@@ -115,6 +116,82 @@ export async function getBenchmark(id: string): Promise<{
     consolidated = null;
   }
   return { state, consolidated };
+}
+
+export async function readBenchmarkLogs(
+  id: string,
+  opts: { sinceFile?: number; sinceLine?: number } = {},
+): Promise<{ lines: string[]; lastFile: number; lastLine: number }> {
+  if (!/^bench_[a-z0-9]+$/.test(id)) return { lines: [], lastFile: 0, lastLine: 0 };
+  const runsDir = join(BENCH_DIR, id, "runs");
+  let files: string[];
+  try {
+    files = (await readdir(runsDir)).filter((f) => f.endsWith(".log")).sort();
+  } catch {
+    return { lines: [], lastFile: 0, lastLine: 0 };
+  }
+
+  const lines: string[] = [];
+  let lastFile = 0;
+  let lastLine = 0;
+  const sinceFile = opts.sinceFile ?? 0;
+  const sinceLine = opts.sinceLine ?? 0;
+
+  for (const f of files) {
+    const seq = parseInt(f.split("_")[0], 10);
+    if (isNaN(seq)) continue;
+    if (seq < sinceFile) continue;
+    lastFile = seq;
+
+    try {
+      const rs = (await open(join(runsDir, f), "r")).createReadStream();
+      let lineNo = 0;
+      for await (const line of createInterface({ input: rs })) {
+        lineNo++;
+        if (seq === sinceFile && lineNo <= sinceLine) continue;
+        lines.push(line);
+        lastLine = lineNo;
+      }
+    } catch {
+      // skip unreadable files
+    }
+  }
+
+  return { lines, lastFile, lastLine };
+}
+
+export async function* watchBenchmarkLogs(
+  id: string,
+  opts: { signal?: AbortSignal; intervalMs?: number } = {},
+): AsyncGenerator<string> {
+  if (!/^bench_[a-z0-9]+$/.test(id)) return;
+  const interval = opts.intervalMs ?? 1000;
+
+  let lastFile = 0;
+  let lastLine = 0;
+
+  while (!opts.signal?.aborted) {
+    const result = await readBenchmarkLogs(id, { sinceFile: lastFile, sinceLine: lastLine });
+    for (const line of result.lines) {
+      yield line;
+    }
+    if (result.lastFile > 0) {
+      lastFile = result.lastFile;
+      lastLine = result.lastLine;
+    }
+
+    await new Promise<void>((resolve) => {
+      const timer = setTimeout(resolve, interval);
+      opts.signal?.addEventListener(
+        "abort",
+        () => {
+          clearTimeout(timer);
+          resolve();
+        },
+        { once: true },
+      );
+    });
+  }
 }
 
 export function isTerminalStatus(status: BenchmarkSummary["status"]): boolean {
