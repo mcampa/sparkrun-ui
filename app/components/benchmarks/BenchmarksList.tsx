@@ -6,6 +6,7 @@ import { Card, CardBody } from "@/app/components/ui/Card";
 import { Badge } from "@/app/components/ui/Badge";
 import { Button } from "@/app/components/ui/Button";
 import { Switch } from "@/app/components/ui/Switch";
+import { LocalTime } from "@/app/components/ui/LocalTime";
 
 type BenchmarkSummary = {
   id: string;
@@ -26,15 +27,6 @@ const statusTones = {
   failed: "red",
   unknown: "neutral",
 } as const;
-
-function fmtTime(iso: string | null): string {
-  if (!iso) return "—";
-  try {
-    return new Date(iso).toLocaleString();
-  } catch {
-    return iso;
-  }
-}
 
 export function BenchmarksList({ benchmarks }: { benchmarks: BenchmarkSummary[] }) {
   const [includeFailed, setIncludeFailed] = useState(false);
@@ -116,7 +108,7 @@ export function BenchmarksList({ benchmarks }: { benchmarks: BenchmarkSummary[] 
                       )}
                     </td>
                     <td className="px-4 py-2 text-xs text-zinc-500 dark:text-zinc-400">
-                      {fmtTime(b.updatedAt)}
+                      <LocalTime iso={b.updatedAt} />
                     </td>
                     <td className="px-4 py-2 text-right">
                       <Link href={`/benchmarks/${b.id}`}>

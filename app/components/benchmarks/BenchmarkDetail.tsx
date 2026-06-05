@@ -1,20 +1,12 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ChevronDown, ChevronRight, Loader2 } from "lucide-react";
 import { Card, CardBody, CardHeader, CardTitle } from "@/app/components/ui/Card";
 import { Badge } from "@/app/components/ui/Badge";
+import { LocalTime } from "@/app/components/ui/LocalTime";
 import { BenchmarkCharts } from "@/app/components/benchmarks/BenchmarkCharts";
 import { rpc } from "@/lib/rpc/client";
 import type { BenchmarkState, Consolidated } from "@/lib/state";
-
-function fmtTime(iso: string | null | undefined): string {
-  if (!iso) return "—";
-  try {
-    return new Date(iso).toLocaleString();
-  } catch {
-    return iso;
-  }
-}
 
 type Status = "running" | "completed" | "partial" | "failed" | "unknown";
 
@@ -172,8 +164,8 @@ export function BenchmarkDetail({
           </CardHeader>
           <CardBody className="flex flex-col gap-2 text-sm">
             <Row label="Cluster" value={state.cluster_id ?? "—"} mono />
-            <Row label="Started" value={fmtTime(state.created_at)} />
-            <Row label="Updated" value={fmtTime(state.updated_at)} />
+            <Row label="Started" value={<LocalTime iso={state.created_at} />} />
+            <Row label="Updated" value={<LocalTime iso={state.updated_at} />} />
             <Row label="Sessions" value={String(state.session_count ?? 0)} />
             <Row
               label="Schedule"
@@ -210,7 +202,7 @@ export function BenchmarkDetail({
                     <Badge tone={s.status === "completed" ? "green" : "amber"}>{s.status}</Badge>
                   </div>
                   <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                    {fmtTime(s.started_at)} → {fmtTime(s.ended_at)}
+                    <LocalTime iso={s.started_at} /> → <LocalTime iso={s.ended_at} />
                   </span>
                 </div>
               ))
@@ -269,7 +261,7 @@ export function BenchmarkDetail({
   );
 }
 
-function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+function Row({ label, value, mono }: { label: string; value: ReactNode; mono?: boolean }) {
   return (
     <div className="flex justify-between gap-2 text-sm">
       <span className="text-zinc-500 dark:text-zinc-400">{label}</span>
