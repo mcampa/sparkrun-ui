@@ -107,14 +107,18 @@ export function WorkloadCard({
                 Logs
               </Button>
             </Link>
-            {recipe?.registeredName && (
-              <Link href={`/benchmarks/new?recipe=${encodeURIComponent(recipe.registeredName)}`}>
-                <Button variant="ghost" size="sm">
-                  <Gauge size={14} />
-                  Benchmark
-                </Button>
-              </Link>
-            )}
+            <Link
+              href={
+                recipe?.registeredName
+                  ? `/benchmarks/new?recipe=${encodeURIComponent(recipe.registeredName)}`
+                  : "/benchmarks/new"
+              }
+            >
+              <Button variant="ghost" size="sm">
+                <Gauge size={14} />
+                Benchmark
+              </Button>
+            </Link>
             <Button
               variant="danger"
               size="sm"
