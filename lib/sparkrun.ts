@@ -245,8 +245,14 @@ export function startBenchmark(args: string[], timeoutMs = 30_000): Promise<{ id
       try {
         child.kill("SIGTERM");
       } catch {}
+      const tail = pending.slice(-50).join("\n");
       reject(
-        new Error(`sparkrun did not emit a benchmark id within ${Math.round(timeoutMs / 1000)}s`),
+        new Error(
+          `sparkrun did not emit a benchmark id within ${Math.round(timeoutMs / 1000)}s` +
+            (tail ? `
+Last output:
+${tail}` : ""),
+        ),
       );
     }, timeoutMs);
 
@@ -311,7 +317,15 @@ export function startBenchmark(args: string[], timeoutMs = 30_000): Promise<{ id
       if (!settled) {
         settled = true;
         clearTimeout(timer);
-        reject(new Error(`sparkrun exited with code ${code ?? -1} before emitting a benchmark id`));
+        const tail = pending.slice(-50).join("\n");
+        reject(
+          new Error(
+            `sparkrun exited with code ${code ?? -1} before emitting a benchmark id` +
+              (tail ? `
+Last output:
+${tail}` : ""),
+          ),
+        );
         return;
       }
       if (!id) return;
