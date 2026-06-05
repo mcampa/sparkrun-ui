@@ -20,6 +20,18 @@ function firstRunning(recipes: RecipeListItem[], running: Set<string>): string |
   return null;
 }
 
+function matchRecipeParam(param: string | null, recipes: RecipeListItem[]): string | null {
+  if (!param) return null;
+  const byName = recipes.find((r) => r.name === param);
+  if (byName) return byName.name;
+  const byFile = recipes.find((r) => r.file === param || r.file.replace(/\.ya?ml$/i, "") === param);
+  if (byFile) return byFile.name;
+  const bySuffix = recipes.find(
+    (r) => r.name.endsWith(`/${param}`) || param.endsWith(`/${r.name}`),
+  );
+  return bySuffix?.name ?? null;
+}
+
 export function NewBenchmarkForm({
   recipes,
   clusters,
@@ -38,9 +50,9 @@ export function NewBenchmarkForm({
   const searchParams = useSearchParams();
   const recipeParam = searchParams.get("recipe");
   const clusterParam = searchParams.get("cluster");
-  const initialRecipe =
-    (recipeParam && recipes.some((r) => r.name === recipeParam) ? recipeParam : null) ??
-    firstRunning(recipes, running);
+  const skipRunParam = searchParams.get("skipRun");
+  const skipRunLocked = skipRunParam === "1" || skipRunParam === "true";
+  const initialRecipe = matchRecipeParam(recipeParam, recipes) ?? firstRunning(recipes, running);
   const initialCluster =
     (clusterParam && clusters.some((c) => c.name === clusterParam) ? clusterParam : null) ??
     defaultClusterName ??
@@ -50,7 +62,9 @@ export function NewBenchmarkForm({
   const [cluster, setCluster] = useState<string>(initialCluster);
   const [profile, setProfile] = useState<string | null>(null);
   const [concurrency, setConcurrency] = useState("5");
-  const [skipRun, setSkipRun] = useState(initialRecipe !== null && running.has(initialRecipe));
+  const [skipRun, setSkipRun] = useState(
+    skipRunLocked || (initialRecipe !== null && running.has(initialRecipe)),
+  );
   const [submitting, setSubmitting] = useState(false);
 
   const recipeOptions = recipes.map((r) => ({
@@ -136,9 +150,13 @@ export function NewBenchmarkForm({
         </Field>
         <Field
           label="Skip launching inference"
-          help="Benchmark against an already-running instance"
+          help={
+            skipRunLocked
+              ? "Locked because you launched from a running workload"
+              : "Benchmark against an already-running instance"
+          }
         >
-          <Switch checked={skipRun} onCheckedChange={setSkipRun} />
+          <Switch checked={skipRun} onCheckedChange={setSkipRun} disabled={skipRunLocked} />
         </Field>
         <div className="flex justify-end">
           <Button variant="primary" disabled={!recipe || submitting} onClick={submit}>

@@ -107,13 +107,7 @@ export function WorkloadCard({
                 Logs
               </Button>
             </Link>
-            <Link
-              href={
-                recipe?.registeredName
-                  ? `/benchmarks/new?recipe=${encodeURIComponent(recipe.registeredName)}`
-                  : "/benchmarks/new"
-              }
-            >
+            <Link href={buildBenchmarkHref(recipe)}>
               <Button variant="ghost" size="sm">
                 <Gauge size={14} />
                 Benchmark
@@ -158,6 +152,14 @@ export function WorkloadCard({
       )}
     </>
   );
+}
+
+function buildBenchmarkHref(recipe?: RunningRecipeDisplay): string {
+  const name = recipe?.registeredName ?? recipe?.label;
+  const params = new URLSearchParams();
+  if (name) params.set("recipe", name);
+  params.set("skipRun", "1");
+  return `/benchmarks/new?${params.toString()}`;
 }
 
 function ReadyBadge({
