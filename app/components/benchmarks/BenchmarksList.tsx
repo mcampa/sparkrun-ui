@@ -94,7 +94,14 @@ export function BenchmarksList({ benchmarks }: { benchmarks: BenchmarkSummary[] 
               <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
                 {visible.map((b) => (
                   <tr key={b.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-950">
-                    <td className="px-4 py-2 font-mono text-xs">{b.id}</td>
+                    <td className="px-4 py-2 font-mono text-xs">
+                      <Link
+                        href={`/benchmarks/${b.id}`}
+                        className="text-sky-600 hover:underline dark:text-sky-400"
+                      >
+                        {b.id}
+                      </Link>
+                    </td>
                     <td className="px-4 py-2 font-mono text-xs">{b.recipe ?? "—"}</td>
                     <td className="px-4 py-2 text-xs">{b.framework ?? "—"}</td>
                     <td className="px-4 py-2">
