@@ -107,7 +107,7 @@ export function WorkloadCard({
                 Logs
               </Button>
             </Link>
-            <Link href={buildBenchmarkHref(recipe)}>
+            <Link href={buildBenchmarkHref(recipe, workload.meta.model)}>
               <Button variant="ghost" size="sm">
                 <Gauge size={14} />
                 Benchmark
@@ -154,10 +154,14 @@ export function WorkloadCard({
   );
 }
 
-function buildBenchmarkHref(recipe?: RunningRecipeDisplay): string {
+function buildBenchmarkHref(
+  recipe: RunningRecipeDisplay | undefined,
+  model: string | undefined,
+): string {
   const name = recipe?.registeredName ?? recipe?.label;
   const params = new URLSearchParams();
   if (name) params.set("recipe", name);
+  if (model) params.set("model", model);
   params.set("skipRun", "1");
   return `/benchmarks/new?${params.toString()}`;
 }

@@ -20,16 +20,31 @@ function firstRunning(recipes: RecipeListItem[], running: Set<string>): string |
   return null;
 }
 
-function matchRecipeParam(param: string | null, recipes: RecipeListItem[]): string | null {
-  if (!param) return null;
-  const byName = recipes.find((r) => r.name === param);
-  if (byName) return byName.name;
-  const byFile = recipes.find((r) => r.file === param || r.file.replace(/\.ya?ml$/i, "") === param);
-  if (byFile) return byFile.name;
-  const bySuffix = recipes.find(
-    (r) => r.name.endsWith(`/${param}`) || param.endsWith(`/${r.name}`),
-  );
-  return bySuffix?.name ?? null;
+function matchRecipeParam(
+  recipeParam: string | null,
+  modelParam: string | null,
+  recipes: RecipeListItem[],
+  running: Set<string>,
+): string | null {
+  if (recipeParam) {
+    const byName = recipes.find((r) => r.name === recipeParam);
+    if (byName) return byName.name;
+    const byFile = recipes.find(
+      (r) => r.file === recipeParam || r.file.replace(/\.ya?ml$/i, "") === recipeParam,
+    );
+    if (byFile) return byFile.name;
+    const bySuffix = recipes.find(
+      (r) => r.name.endsWith(`/${recipeParam}`) || recipeParam.endsWith(`/${r.name}`),
+    );
+    if (bySuffix) return bySuffix.name;
+  }
+  if (modelParam) {
+    const candidates = recipes.filter((r) => r.model === modelParam);
+    const runningOne = candidates.find((r) => running.has(r.name));
+    if (runningOne) return runningOne.name;
+    if (candidates[0]) return candidates[0].name;
+  }
+  return null;
 }
 
 export function NewBenchmarkForm({
@@ -49,10 +64,12 @@ export function NewBenchmarkForm({
   const router = useRouter();
   const searchParams = useSearchParams();
   const recipeParam = searchParams.get("recipe");
+  const modelParam = searchParams.get("model");
   const clusterParam = searchParams.get("cluster");
   const skipRunParam = searchParams.get("skipRun");
   const skipRunLocked = skipRunParam === "1" || skipRunParam === "true";
-  const initialRecipe = matchRecipeParam(recipeParam, recipes) ?? firstRunning(recipes, running);
+  const initialRecipe =
+    matchRecipeParam(recipeParam, modelParam, recipes, running) ?? firstRunning(recipes, running);
   const initialCluster =
     (clusterParam && clusters.some((c) => c.name === clusterParam) ? clusterParam : null) ??
     defaultClusterName ??
