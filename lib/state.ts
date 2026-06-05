@@ -117,14 +117,75 @@ export async function getBenchmark(id: string): Promise<{
   return { state, consolidated };
 }
 
-function deriveStatus(state: BenchmarkState): BenchmarkSummary["status"] {
+export function isTerminalStatus(status: BenchmarkSummary["status"]): boolean {
+  return status === "completed" || status === "partial" || status === "failed";
+}
+
+export async function* watchBenchmarkFiles(
+  id: string,
+  opts: { signal?: AbortSignal; intervalMs?: number } = {},
+): AsyncGenerator<{ state?: BenchmarkState; consolidated?: Consolidated | null }> {
+  if (!/^bench_[a-z0-9]+$/.test(id)) return;
+  const dir = join(BENCH_DIR, id);
+  const interval = opts.intervalMs ?? 1000;
+  const statePath = join(dir, "state.yaml");
+  const consPath = join(dir, "consolidated.json");
+
+  let lastStateMtime = 0;
+  let lastConsMtime = 0;
+
+  while (!opts.signal?.aborted) {
+    const out: { state?: BenchmarkState; consolidated?: Consolidated | null } = {};
+    try {
+      const s = await stat(statePath);
+      const m = s.mtimeMs;
+      if (m !== lastStateMtime) {
+        lastStateMtime = m;
+        try {
+          out.state = parseYaml(await readFile(statePath, "utf8")) as BenchmarkState;
+        } catch {}
+      }
+    } catch {}
+    try {
+      const s = await stat(consPath);
+      const m = s.mtimeMs;
+      if (m !== lastConsMtime) {
+        lastConsMtime = m;
+        try {
+          out.consolidated = JSON.parse(await readFile(consPath, "utf8")) as Consolidated;
+        } catch {}
+      }
+    } catch {}
+
+    if (out.state || out.consolidated !== undefined) {
+      yield out;
+    }
+
+    await new Promise<void>((resolve) => {
+      const timer = setTimeout(resolve, interval);
+      opts.signal?.addEventListener(
+        "abort",
+        () => {
+          clearTimeout(timer);
+          resolve();
+        },
+        { once: true },
+      );
+    });
+  }
+}
+
+export function deriveStatus(state: BenchmarkState): BenchmarkSummary["status"] {
   const last = state.sessions?.[state.sessions.length - 1];
   if (!last) return "unknown";
   if (last.status === "completed") return "completed";
+  if (last.status === "running") return "running";
   if (last.status === "partial") {
     if (!last.ended_at) return "running";
     return state.failed_indices?.length ? "failed" : "partial";
   }
   if (last.status === "failed") return "failed";
+  // Any unrecognized status without an ended_at is still in-flight.
+  if (!last.ended_at) return "running";
   return "unknown";
 }

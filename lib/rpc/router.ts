@@ -39,6 +39,7 @@ export const router = {
     get: benchmarks.get,
     profiles: benchmarks.profiles,
     run: benchmarks.run,
+    watch: benchmarks.watch,
   },
   logs: {
     stream: logs.stream,

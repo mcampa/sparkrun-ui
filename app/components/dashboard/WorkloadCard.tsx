@@ -1,6 +1,6 @@
 "use client";
 import { useState, useTransition } from "react";
-import { MessageSquare, Square, ScrollText, Loader2 } from "lucide-react";
+import { Gauge, MessageSquare, Square, ScrollText, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Card, CardBody, CardHeader, CardTitle } from "@/app/components/ui/Card";
 import { Button } from "@/app/components/ui/Button";
@@ -107,6 +107,18 @@ export function WorkloadCard({
                 Logs
               </Button>
             </Link>
+            <Link
+              href={buildBenchmarkHref(
+                recipe,
+                workload.meta.model,
+                extractServedModelName(workload.meta),
+              )}
+            >
+              <Button variant="ghost" size="sm">
+                <Gauge size={14} />
+                Benchmark
+              </Button>
+            </Link>
             <Button
               variant="danger"
               size="sm"
@@ -146,6 +158,35 @@ export function WorkloadCard({
       )}
     </>
   );
+}
+
+function extractServedModelName(meta: Workload["meta"]): string | undefined {
+  const overrides = meta?.overrides as Record<string, unknown> | undefined;
+  const ov = overrides?.served_model_name;
+  if (typeof ov === "string" && ov) return ov;
+  const recipeState = meta?.recipe_state as Record<string, unknown> | undefined;
+  const applied = recipeState?._applied_overrides as Record<string, unknown> | undefined;
+  const ap = applied?.served_model_name;
+  if (typeof ap === "string" && ap) return ap;
+  const raw = recipeState?._raw as Record<string, unknown> | undefined;
+  const defaults = raw?.defaults as Record<string, unknown> | undefined;
+  const def = defaults?.served_model_name;
+  if (typeof def === "string" && def) return def;
+  return undefined;
+}
+
+function buildBenchmarkHref(
+  recipe: RunningRecipeDisplay | undefined,
+  model: string | undefined,
+  servedModelName: string | undefined,
+): string {
+  const name = recipe?.registeredName ?? recipe?.label;
+  const params = new URLSearchParams();
+  if (name) params.set("recipe", name);
+  if (model) params.set("model", model);
+  if (servedModelName) params.set("servedModelName", servedModelName);
+  params.set("skipRun", "1");
+  return `/benchmarks/new?${params.toString()}`;
 }
 
 function ReadyBadge({
