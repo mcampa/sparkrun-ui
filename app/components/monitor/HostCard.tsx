@@ -1,5 +1,5 @@
 "use client";
-import { Cpu, Server, Thermometer, Zap } from "lucide-react";
+import { Cpu, MemoryStick, Server, Zap } from "lucide-react";
 import { Card, CardBody, CardHeader, CardTitle, CardDescription } from "@/app/components/ui/Card";
 import { Badge } from "@/app/components/ui/Badge";
 
@@ -71,7 +71,7 @@ export function HostCard({
           label="Memory"
           pct={memPct}
           history={history.mem}
-          icon={<Thermometer size={14} />}
+          icon={<MemoryStick size={14} />}
           tone="green"
           right={`${(memUsed / 1024).toFixed(1)}/${(memTotal / 1024).toFixed(0)} GB`}
         />
