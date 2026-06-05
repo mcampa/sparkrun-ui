@@ -88,6 +88,10 @@ export const run = os
     if (input.concurrency?.length) {
       args.push("-b", `concurrency=${input.concurrency.join(",")}`);
     }
+    // Always start fresh: sparkrun otherwise prompts "Resume? [Y/n]" when
+    // it finds incomplete state from a prior failed run, which hangs the
+    // non-interactive child process.
+    args.push("--fresh");
     if (args.length === 3) {
       throw new ORPCError("BAD_REQUEST", {
         message: "Must specify at least cluster, hosts, or profile",
