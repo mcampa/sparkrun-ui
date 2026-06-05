@@ -74,6 +74,9 @@ export const run = os
       framework: z.string().optional(),
       skipRun: z.boolean().default(false),
       concurrency: z.array(z.number().int().positive()).optional(),
+      pp: z.array(z.number().int().positive()).optional(),
+      tg: z.array(z.number().int().positive()).optional(),
+      depth: z.array(z.number().int().nonnegative()).optional(),
       servedModelName: z.string().optional(),
     }),
   )
@@ -88,6 +91,15 @@ export const run = os
     if (input.skipRun) args.push("--skip-run");
     if (input.concurrency?.length) {
       args.push("-b", `concurrency=${input.concurrency.join(",")}`);
+    }
+    if (input.pp?.length) {
+      args.push("-b", `pp=${input.pp.join(",")}`);
+    }
+    if (input.tg?.length) {
+      args.push("-b", `tg=${input.tg.join(",")}`);
+    }
+    if (input.depth?.length) {
+      args.push("-b", `depth=${input.depth.join(",")}`);
     }
     if (input.servedModelName) {
       // Force the API model identifier llama-benchy sends in requests. Recipes

@@ -79,7 +79,10 @@ export function NewBenchmarkForm({
   const [recipe, setRecipe] = useState<string | null>(initialRecipe);
   const [cluster, setCluster] = useState<string>(initialCluster);
   const [profile, setProfile] = useState<string | null>(null);
-  const [concurrency, setConcurrency] = useState("5");
+  const [concurrency, setConcurrency] = useState("1,2,5,10");
+  const [pp, setPp] = useState("2048");
+  const [tg, setTg] = useState("128");
+  const [depth, setDepth] = useState("0,4096,8192,16384,32768,65535,100000");
   const [skipRun, setSkipRun] = useState(
     skipRunLocked || (initialRecipe !== null && running.has(initialRecipe)),
   );
@@ -109,15 +112,21 @@ export function NewBenchmarkForm({
     if (!recipe) return;
     setSubmitting(true);
     try {
-      const concList = concurrency
-        .split(",")
-        .map((s) => parseInt(s.trim(), 10))
-        .filter((n) => Number.isFinite(n) && n > 0);
+      const parseList = (s: string, allowZero: boolean): number[] =>
+        s
+          .split(",")
+          .map((p) => parseInt(p.trim(), 10))
+          .filter((n) => Number.isFinite(n) && (allowZero ? n >= 0 : n > 0));
       const { id } = await rpc.benchmarks.run({
         recipe,
         cluster: cluster || undefined,
         profile: profile || undefined,
-        concurrency: concList.length ? concList : undefined,
+        concurrency: parseList(concurrency, false).length
+          ? parseList(concurrency, false)
+          : undefined,
+        pp: parseList(pp, false).length ? parseList(pp, false) : undefined,
+        tg: parseList(tg, false).length ? parseList(tg, false) : undefined,
+        depth: parseList(depth, true).length ? parseList(depth, true) : undefined,
         skipRun,
         servedModelName: servedModelNameParam || undefined,
       });
@@ -161,12 +170,20 @@ export function NewBenchmarkForm({
             />
           </Field>
         </div>
-        <Field
-          label="Concurrency (comma-separated)"
-          help="e.g. 1,5,10 — overrides benchmark concurrency schedule"
-        >
-          <Input value={concurrency} onChange={(e) => setConcurrency(e.target.value)} />
-        </Field>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Concurrency" help="Parallel requests — comma-separated">
+            <Input value={concurrency} onChange={(e) => setConcurrency(e.target.value)} />
+          </Field>
+          <Field label="Prompt processing (pp)" help="Input token counts — comma-separated">
+            <Input value={pp} onChange={(e) => setPp(e.target.value)} />
+          </Field>
+          <Field label="Token generation (tg)" help="Output token counts — comma-separated">
+            <Input value={tg} onChange={(e) => setTg(e.target.value)} />
+          </Field>
+          <Field label="Context depth" help="Prior conversation tokens — comma-separated">
+            <Input value={depth} onChange={(e) => setDepth(e.target.value)} />
+          </Field>
+        </div>
         <Field
           label="Skip launching inference"
           help={
